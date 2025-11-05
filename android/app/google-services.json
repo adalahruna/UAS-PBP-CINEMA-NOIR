@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "462754702925",
+    "project_id": "uas-kelompok-1-cf6d1",
+    "storage_bucket": "uas-kelompok-1-cf6d1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:462754702925:android:5f312563dfc87b2df25e04",
+        "android_client_info": {
+          "package_name": "com.example.cinema_noir"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlsT30jyX3akmdB2sqwutggmf_fmFJ02k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
