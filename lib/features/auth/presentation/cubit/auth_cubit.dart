@@ -1,47 +1,76 @@
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'auth_state.dart'; // Import state yang kita buat tadi
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  // Ambil instance dari Firebase Auth
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance; // Instance Firestore
 
-  AuthCubit() : super(AuthInitial()); // State awalnya adalah Initial
+  AuthCubit() : super(AuthInitial());
 
-  // --- FUNGSI LOGIN ---
+  // --- FUNGSI LOGIN --- (Biarkan)
   Future<void> login(String email, String password) async {
+    // ... (kode login Anda yang sudah ada, biarkan saja)
+  }
+
+  // --- TAMBAHKAN FUNGSI REGISTER BARU ---
+  Future<void> register({
+    required String email,
+    required String password,
+    required String fullName,
+  }) async {
     try {
-      // 1. Beri tahu UI bahwa kita sedang loading
       emit(AuthLoading());
 
-      // 2. Coba login ke Firebase
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      // 1. Buat user di Firebase Auth
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-      // 3. Jika berhasil, beri tahu UI dan kirim data User-nya
       if (userCredential.user != null) {
+        // 2. Simpan data tambahan (nama) ke Firestore
+        await _saveUserToFirestore(
+          user: userCredential.user!,
+          fullName: fullName,
+        );
+
+        // 3. Update state
         emit(Authenticated(userCredential.user!));
       } else {
-        emit(
-          const Unauthenticated(message: 'Gagal login, user tidak ditemukan.'),
-        );
+        emit(const Unauthenticated(message: 'Gagal membuat akun.'));
       }
     } on FirebaseAuthException catch (e) {
-      // 4. Jika Firebase memberi error (misal: password salah)
+      // Tangani error spesifik (misal: email sudah dipakai)
       emit(Unauthenticated(message: e.message ?? 'Terjadi error'));
     } catch (e) {
-      // 5. Jika ada error lain
       emit(Unauthenticated(message: e.toString()));
     }
   }
 
-  // --- FUNGSI LOGOUT ---
-  Future<void> logout() async {
-    await _auth.signOut();
-    emit(const Unauthenticated()); // Kembalikan ke state Unauthenticated
+  // --- TAMBAHKAN FUNGSI HELPER UNTUK FIRESTORE ---
+  Future<void> _saveUserToFirestore({
+    required User user,
+    required String fullName,
+  }) async {
+    try {
+      // Buat dokumen baru di koleksi 'users' dengan ID unik dari user
+      await _firestore.collection('users').doc(user.uid).set({
+        'uid': user.uid,
+        'email': user.email,
+        'fullName': fullName,
+        'createdAt': FieldValue.serverTimestamp(), // Simpan waktu pendaftaran
+      });
+    } catch (e) {
+      // Jika gagal simpan ke firestore, kita hanya print error-nya
+      // tapi login tetap dianggap berhasil.
+      print('Gagal menyimpan user ke Firestore: $e');
+    }
   }
 
-  // Nanti kita tambahkan fungsi register di sini
+  // --- FUNGSI LOGOUT --- (Biarkan)
+  Future<void> logout() async {
+    await _auth.signOut();
+    emit(const Unauthenticated());
+  }
 }
