@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import BLoC
 import 'package:go_router/go_router.dart';
 import 'package:sizer/sizer.dart';
+
+// Import Cubit dan State kita
+import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:cinema_noir/features/auth/presentation/cubit/auth_state.dart';
+// Import warna kita
+import 'package:cinema_noir/core/constants/app_colors.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,131 +17,185 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Controller untuk mengambil data dari text field
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
-  // Kunci untuk validasi Form
   final _formKey = GlobalKey<FormState>();
 
   @override
   void dispose() {
-    // Selalu dispose controller Anda
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   void _login() {
-    // Nanti, kita akan panggil BLoC/Cubit dari sini
-    // if (_formKey.currentState!.validate()) {
-    //   String email = _emailController.text;
-    //   String password = _passwordController.text;
-    //   print('Mencoba login dengan Email: $email, Password: $password');
-    //   // context.read<AuthCubit>().login(email, password);
-    // }
-    print('Tombol login diklik!');
+    // 1. Cek apakah form valid (sesuai validator)
+    if (_formKey.currentState!.validate()) {
+      String email = _emailController.text;
+      String password = _passwordController.text;
+
+      // 2. Panggil fungsi login di AuthCubit!
+      context.read<AuthCubit>().login(email, password);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Ambil warna emas dari tema
     final Color goldColor = Theme.of(context).primaryColor;
 
-    return Scaffold(
-      // Kita pakai SingleChildScrollView agar tidak error
-      // jika keyboard muncul di layar kecil
-      body: Center(
-        child: SingleChildScrollView(
-          // Padding responsif menggunakan Sizer
-          padding: EdgeInsets.symmetric(horizontal: 10.w),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // --- JUDUL ---
-                Text(
-                  'Cinema Noir',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24.sp, // Font responsif
-                    fontWeight: FontWeight.bold,
-                    color: goldColor, // Warna emas
-                  ),
-                ),
-                SizedBox(height: 1.h),
-                Text(
-                  'The show is about to begin.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                ),
-                SizedBox(height: 5.h), // Jarak responsif
-                // --- EMAIL FIELD ---
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  // Nanti kita tambahkan validator
-                ),
-                SizedBox(height: 2.h),
+    // Kita bungkus SEMUA dengan BlocListener
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        // --- REAKSI TERHADAP STATE ---
 
-                // --- PASSWORD FIELD ---
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true, // Menyembunyikan password
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock_outline),
-                    // Nanti kita tambahkan ikon untuk show/hide password
-                  ),
-                  // Nanti kita tambahkan validator
-                ),
-                SizedBox(height: 4.h),
+        if (state is AuthLoading) {
+          // Tampilkan dialog loading (tidak bisa ditutup)
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const Center(
+              child: CircularProgressIndicator(
+                color: AppColors.gold, // Pakai warna emas kita
+              ),
+            ),
+          );
+        }
 
-                // --- LOGIN BUTTON ---
-                // Tombol ini otomatis mengambil style dari tema
-                ElevatedButton(
-                  onPressed: _login, // Panggil fungsi _login
-                  child: Text(
-                    'Login',
+        if (state is Unauthenticated) {
+          // 1. Tutup dialog loading
+          // (Cek 'ModalRoute' untuk pastikan kita hanya pop dialog)
+          if (ModalRoute.of(context)?.isCurrent != true) {
+            Navigator.of(context, rootNavigator: true).pop();
+          }
+
+          // 2. Tampilkan pesan error
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.message ?? 'Login Gagal. Cek email/password.',
+              ),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+
+        if (state is Authenticated) {
+          // 1. Tutup dialog loading
+          if (ModalRoute.of(context)?.isCurrent != true) {
+            Navigator.of(context, rootNavigator: true).pop();
+          }
+          // Di tahap selanjutnya, GoRouter akan otomatis
+          // memindahkan kita dari sini.
+        }
+      },
+      child: Scaffold(
+        body: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // --- JUDUL ---
+                  Text(
+                    'Cinema Noir',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 13.sp,
+                      fontSize: 24.sp,
                       fontWeight: FontWeight.bold,
+                      color: goldColor,
                     ),
                   ),
-                ),
-                SizedBox(height: 3.h),
+                  SizedBox(height: 1.h),
+                  Text(
+                    'The show is about to begin.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                  ),
+                  SizedBox(height: 5.h),
 
-                // --- LINK KE REGISTER ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Don't have an account?",
-                      style: TextStyle(fontSize: 11.sp),
+                  // --- EMAIL FIELD ---
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      prefixIcon: Icon(Icons.email_outlined),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        // Pergi ke halaman register menggunakan GoRouter
-                        context.push('/register');
-                      },
-                      child: Text(
-                        'Register Now',
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: goldColor,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    keyboardType: TextInputType.emailAddress,
+                    // VALIDATOR
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Email tidak boleh kosong';
+                      }
+                      if (!value.contains('@') || !value.contains('.')) {
+                        return 'Email tidak valid';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 2.h),
+
+                  // --- PASSWORD FIELD ---
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      prefixIcon: Icon(Icons.lock_outline),
+                    ),
+                    // VALIDATOR
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Password tidak boleh kosong';
+                      }
+                      if (value.length < 6) {
+                        return 'Password minimal 6 karakter';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: 4.h),
+
+                  // --- LOGIN BUTTON ---
+                  ElevatedButton(
+                    onPressed: _login, // Panggil fungsi _login
+                    child: Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  SizedBox(height: 3.h),
+
+                  // --- LINK KE REGISTER ---
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account?",
+                        style: TextStyle(fontSize: 11.sp),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          context.push('/register');
+                        },
+                        child: Text(
+                          'Register Now',
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color: goldColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
