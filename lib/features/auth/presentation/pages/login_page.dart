@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart'; // Import BLoC
-import 'package:go_router/go_router.dart';
-import 'package:sizer/sizer.dart';
+import 'package:go_router/go_router.dart'; // <-- Akan terpakai
+import 'package:sizer/sizer.dart'; // <-- Akan terpakai
 
 // Import Cubit dan State kita
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
@@ -29,6 +29,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() {
+    // <-- Akan terpakai
     // 1. Cek apakah form valid (sesuai validator)
     if (_formKey.currentState!.validate()) {
       String email = _emailController.text;
@@ -41,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Color goldColor = Theme.of(context).primaryColor;
+    final Color goldColor = Theme.of(context).primaryColor; // <-- Akan terpakai
 
     // Kita bungkus SEMUA dengan BlocListener
     return BlocListener<AuthCubit, AuthState>(
@@ -63,7 +64,6 @@ class _LoginPageState extends State<LoginPage> {
 
         if (state is Unauthenticated) {
           // 1. Tutup dialog loading
-          // (Cek 'ModalRoute' untuk pastikan kita hanya pop dialog)
           if (ModalRoute.of(context)?.isCurrent != true) {
             Navigator.of(context, rootNavigator: true).pop();
           }
@@ -84,14 +84,18 @@ class _LoginPageState extends State<LoginPage> {
           if (ModalRoute.of(context)?.isCurrent != true) {
             Navigator.of(context, rootNavigator: true).pop();
           }
-          // Di tahap selanjutnya, GoRouter akan otomatis
-          // memindahkan kita dari sini.
+
+          // TIDAK PERLU NAVIGASI MANUAL DI SINI.
+          // GoRouter + refreshListenable akan mendeteksi
+          // perubahan state login dan melakukan redirect secara otomatis.
         }
       },
       child: Scaffold(
         body: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            padding: EdgeInsets.symmetric(
+              horizontal: 10.w,
+            ), // <-- Sizer terpakai
             child: Form(
               key: _formKey,
               child: Column(
@@ -103,19 +107,21 @@ class _LoginPageState extends State<LoginPage> {
                     'Cinema Noir',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 24.sp,
+                      fontSize: 24.sp, // <-- Sizer terpakai
                       fontWeight: FontWeight.bold,
-                      color: goldColor,
+                      color: goldColor, // <-- goldColor terpakai
                     ),
                   ),
-                  SizedBox(height: 1.h),
+                  SizedBox(height: 1.h), // <-- Sizer terpakai
                   Text(
                     'The show is about to begin.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 12.sp, // <-- Sizer terpakai
+                      color: Colors.grey,
+                    ),
                   ),
-                  SizedBox(height: 5.h),
-
+                  SizedBox(height: 5.h), // <-- Sizer terpakai
                   // --- EMAIL FIELD ---
                   TextFormField(
                     controller: _emailController,
@@ -135,8 +141,7 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 2.h),
-
+                  SizedBox(height: 2.h), // <-- Sizer terpakai
                   // --- PASSWORD FIELD ---
                   TextFormField(
                     controller: _passwordController,
@@ -156,38 +161,36 @@ class _LoginPageState extends State<LoginPage> {
                       return null;
                     },
                   ),
-                  SizedBox(height: 4.h),
-
+                  SizedBox(height: 4.h), // <-- Sizer terpakai
                   // --- LOGIN BUTTON ---
                   ElevatedButton(
-                    onPressed: _login, // Panggil fungsi _login
+                    onPressed: _login, // <-- _login terpakai
                     child: Text(
                       'Login',
                       style: TextStyle(
                         fontSize: 13.sp,
                         fontWeight: FontWeight.bold,
-                      ),
+                      ), // <-- Sizer terpakai
                     ),
                   ),
-                  SizedBox(height: 3.h),
-
+                  SizedBox(height: 3.h), // <-- Sizer terpakai
                   // --- LINK KE REGISTER ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         "Don't have an account?",
-                        style: TextStyle(fontSize: 11.sp),
+                        style: TextStyle(fontSize: 11.sp), // <-- Sizer terpakai
                       ),
                       TextButton(
                         onPressed: () {
-                          context.push('/register');
+                          context.push('/register'); // <-- GoRouter terpakai
                         },
                         child: Text(
                           'Register Now',
                           style: TextStyle(
-                            fontSize: 11.sp,
-                            color: goldColor,
+                            fontSize: 11.sp, // <-- Sizer terpakai
+                            color: goldColor, // <-- goldColor terpakai
                             fontWeight: FontWeight.bold,
                           ),
                         ),
