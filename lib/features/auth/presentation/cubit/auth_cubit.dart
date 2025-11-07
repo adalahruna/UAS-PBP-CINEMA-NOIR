@@ -1,21 +1,41 @@
+// File: lib/features/auth/presentation/cubit/auth_cubit.dart
+
 import 'package:bloc/bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:google_sign_in/google_sign_in.dart'; // <-- DIHAPUS
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance; // Instance Firestore
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // final GoogleSignIn _googleSignIn = GoogleSignIn(); // <-- DIHAPUS
 
   AuthCubit() : super(AuthInitial());
 
-  // --- FUNGSI LOGIN --- (Biarkan)
+  // --- FUNGSI LOGIN ---
   Future<void> login(String email, String password) async {
-    // ... (kode login Anda yang sudah ada, biarkan saja)
+    try {
+      emit(AuthLoading());
+      
+      final UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email, 
+        password: password
+      );
+
+      // Tetap emit Authenticated agar dialog loading tertutup
+      if (userCredential.user != null) {
+        emit(Authenticated(userCredential.user!));
+      }
+
+    } on FirebaseAuthException catch (e) {
+      emit(Unauthenticated(message: e.message ?? 'Terjadi error'));
+    } catch (e) {
+      emit(Unauthenticated(message: e.toString()));
+    }
   }
 
-  // --- TAMBAHKAN FUNGSI REGISTER BARU ---
+  // --- FUNGSI REGISTER ---
   Future<void> register({
     required String email,
     required String password,
@@ -23,53 +43,55 @@ class AuthCubit extends Cubit<AuthState> {
   }) async {
     try {
       emit(AuthLoading());
-
-      // 1. Buat user di Firebase Auth
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password);
 
       if (userCredential.user != null) {
-        // 2. Simpan data tambahan (nama) ke Firestore
         await _saveUserToFirestore(
           user: userCredential.user!,
           fullName: fullName,
         );
-
-        // 3. Update state
+        
+        // Tetap emit Authenticated agar dialog loading tertutup
         emit(Authenticated(userCredential.user!));
       } else {
         emit(const Unauthenticated(message: 'Gagal membuat akun.'));
       }
     } on FirebaseAuthException catch (e) {
-      // Tangani error spesifik (misal: email sudah dipakai)
       emit(Unauthenticated(message: e.message ?? 'Terjadi error'));
     } catch (e) {
       emit(Unauthenticated(message: e.toString()));
     }
   }
 
-  // --- TAMBAHKAN FUNGSI HELPER UNTUK FIRESTORE ---
+  // --- FUNGSI LOGIN DENGAN GOOGLE DIHAPUS ---
+  // Future<void> loginWithGoogle() async { ... }
+
+  // --- FUNGSI HELPER UNTUK FIRESTORE ---
   Future<void> _saveUserToFirestore({
     required User user,
     required String fullName,
   }) async {
     try {
-      // Buat dokumen baru di koleksi 'users' dengan ID unik dari user
-      await _firestore.collection('users').doc(user.uid).set({
-        'uid': user.uid,
-        'email': user.email,
-        'fullName': fullName,
-        'createdAt': FieldValue.serverTimestamp(), // Simpan waktu pendaftaran
-      });
+      final doc = _firestore.collection('users').doc(user.uid);
+      final snapshot = await doc.get();
+
+      if (!snapshot.exists) {
+        await doc.set({
+          'uid': user.uid,
+          'email': user.email,
+          'fullName': fullName,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
     } catch (e) {
-      // Jika gagal simpan ke firestore, kita hanya print error-nya
-      // tapi login tetap dianggap berhasil.
       print('Gagal menyimpan user ke Firestore: $e');
     }
   }
 
-  // --- FUNGSI LOGOUT --- (Biarkan)
+  // --- FUNGSI LOGOUT ---
   Future<void> logout() async {
+    // await _googleSignIn.signOut(); // <-- DIHAPUS
     await _auth.signOut();
     emit(const Unauthenticated());
   }

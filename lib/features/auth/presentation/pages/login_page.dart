@@ -1,12 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // Import BLoC
-import 'package:go_router/go_router.dart'; // <-- Akan terpakai
-import 'package:sizer/sizer.dart'; // <-- Akan terpakai
+// File: lib/features/auth/presentation/pages/login_page.dart
 
-// Import Cubit dan State kita
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_state.dart';
-// Import warna kita
 import 'package:cinema_noir/core/constants/app_colors.dart';
 
 class LoginPage extends StatefulWidget {
@@ -29,46 +27,36 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _login() {
-    // <-- Akan terpakai
-    // 1. Cek apakah form valid (sesuai validator)
     if (_formKey.currentState!.validate()) {
       String email = _emailController.text;
       String password = _passwordController.text;
-
-      // 2. Panggil fungsi login di AuthCubit!
       context.read<AuthCubit>().login(email, password);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final Color goldColor = Theme.of(context).primaryColor; // <-- Akan terpakai
+    final Color goldColor = Theme.of(context).primaryColor;
 
-    // Kita bungkus SEMUA dengan BlocListener
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
-        // --- REAKSI TERHADAP STATE ---
-
+        // ... (Logika BlocListener Anda tetap sama)
         if (state is AuthLoading) {
-          // Tampilkan dialog loading (tidak bisa ditutup)
           showDialog(
             context: context,
             barrierDismissible: false,
             builder: (context) => const Center(
               child: CircularProgressIndicator(
-                color: AppColors.gold, // Pakai warna emas kita
+                color: AppColors.gold,
               ),
             ),
           );
         }
 
         if (state is Unauthenticated) {
-          // 1. Tutup dialog loading
           if (ModalRoute.of(context)?.isCurrent != true) {
             Navigator.of(context, rootNavigator: true).pop();
           }
-
-          // 2. Tampilkan pesan error
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -80,124 +68,155 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         if (state is Authenticated) {
-          // 1. Tutup dialog loading
           if (ModalRoute.of(context)?.isCurrent != true) {
             Navigator.of(context, rootNavigator: true).pop();
           }
-
-          // TIDAK PERLU NAVIGASI MANUAL DI SINI.
-          // GoRouter + refreshListenable akan mendeteksi
-          // perubahan state login dan melakukan redirect secara otomatis.
         }
       },
       child: Scaffold(
         body: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: 10.w,
-            ), // <-- Sizer terpakai
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // --- JUDUL ---
-                  Text(
-                    'Cinema Noir',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 24.sp, // <-- Sizer terpakai
-                      fontWeight: FontWeight.bold,
-                      color: goldColor, // <-- goldColor terpakai
-                    ),
-                  ),
-                  SizedBox(height: 1.h), // <-- Sizer terpakai
-                  Text(
-                    'The show is about to begin.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12.sp, // <-- Sizer terpakai
-                      color: Colors.grey,
-                    ),
-                  ),
-                  SizedBox(height: 5.h), // <-- Sizer terpakai
-                  // --- EMAIL FIELD ---
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    // VALIDATOR
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Email tidak boleh kosong';
-                      }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return 'Email tidak valid';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 2.h), // <-- Sizer terpakai
-                  // --- PASSWORD FIELD ---
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: Icon(Icons.lock_outline),
-                    ),
-                    // VALIDATOR
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password tidak boleh kosong';
-                      }
-                      if (value.length < 6) {
-                        return 'Password minimal 6 karakter';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 4.h), // <-- Sizer terpakai
-                  // --- LOGIN BUTTON ---
-                  ElevatedButton(
-                    onPressed: _login, // <-- _login terpakai
-                    child: Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.bold,
-                      ), // <-- Sizer terpakai
-                    ),
-                  ),
-                  SizedBox(height: 3.h), // <-- Sizer terpakai
-                  // --- LINK KE REGISTER ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account?",
-                        style: TextStyle(fontSize: 11.sp), // <-- Sizer terpakai
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          context.push('/register'); // <-- GoRouter terpakai
-                        },
-                        child: Text(
-                          'Register Now',
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 500, // Lebar maksimum form
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0, // Padding tetap
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // --- JUDUL (SESUAI GAMBAR) ---
+                    Column(
+                      children: [
+                        Text(
+                          'Cine',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 11.sp, // <-- Sizer terpakai
-                            color: goldColor, // <-- goldColor terpakai
+                            fontSize: 34,
                             fontWeight: FontWeight.bold,
+                            color: goldColor,
+                            height: 1.2,
                           ),
                         ),
+                        Text(
+                          'ma',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.bold,
+                            color: goldColor,
+                            height: 1.2,
+                          ),
+                        ),
+                        Text(
+                          'Noir',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 34,
+                            fontWeight: FontWeight.bold,
+                            color: goldColor,
+                            height: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16.0),
+                    Text(
+                      'The show is about to begin.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 40.0),
+
+                    // --- EMAIL FIELD ---
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email tidak boleh kosong';
+                        }
+                        if (!value.contains('@') || !value.contains('.')) {
+                          return 'Email tidak valid';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // --- PASSWORD FIELD ---
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: Icon(Icons.lock_outline),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Password tidak boleh kosong';
+                        }
+                        if (value.length < 6) {
+                          return 'Password minimal 6 karakter';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 32.0),
+
+                    // --- LOGIN BUTTON ---
+                    ElevatedButton(
+                      onPressed: _login,
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    
+                    // --- TOMBOL GOOGLE & PEMBATAS DIHAPUS ---
+                    
+                    const SizedBox(height: 24.0), // Spasi yang sebelumnya ada
+
+                    // --- LINK KE REGISTER (Menggunakan Wrap) ---
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        const Text(
+                          "Don't have an account?",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            context.push('/register');
+                          },
+                          child: Text(
+                            'Register Now',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: goldColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -9,11 +9,9 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: AppColors.gold,
         secondary: AppColors.gold,
-        background: AppColors.darkBackground,
         surface: AppColors.darkBackground,
         onPrimary: AppColors.darkBackground, // Warna teks di atas Emas
-        onSecondary: AppColors.darkBackground,
-        onBackground: AppColors.textWhite, // Warna teks di atas Hitam
+        onSecondary: AppColors.darkBackground, // Warna teks di atas Hitam
         onSurface: AppColors.textWhite,
         error: Colors.redAccent,
         onError: Colors.white,
