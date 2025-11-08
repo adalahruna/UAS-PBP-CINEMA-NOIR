@@ -1,3 +1,5 @@
+// lib/core/api/tmdb_service.dart
+
 import 'package:dio/dio.dart';
 import 'package:cinema_noir/core/constants/api_constants.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
@@ -7,15 +9,15 @@ class TmdbService {
   final Dio _dio;
 
   TmdbService()
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: ApiConstants.tmdbBaseUrl,
-          queryParameters: {
-            'api_key': ApiConstants.tmdbApiKey, // Selalu tambahkan API Key
-            'language': 'en-US',
-          },
-        ),
-      ) {
+      : _dio = Dio(
+          BaseOptions(
+            baseUrl: ApiConstants.tmdbBaseUrl,
+            queryParameters: {
+              'api_key': ApiConstants.tmdbApiKey, // Selalu tambahkan API Key
+              'language': 'en-US',
+            },
+          ),
+        ) {
     // (Opsional) Tambahkan Interceptor untuk logging
     _dio.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true),
@@ -65,6 +67,28 @@ class TmdbService {
       rethrow;
     } catch (e) {
       print('Error getUpcomingMovies: $e');
+      rethrow;
+    }
+  }
+
+  // --- BARU: Fungsi untuk mengambil Top Rated Movies ---
+  /// Mengambil daftar film dengan rating tertinggi (Top Rated)
+  Future<List<MovieModel>> getTopRatedMovies() async {
+    try {
+      final response = await _dio.get('/movie/top_rated');
+
+      final List results = response.data['results'] as List;
+
+      final List<MovieModel> movies = results
+          .map((movieJson) => MovieModel.fromJson(movieJson))
+          .toList();
+
+      return movies;
+    } on DioException catch (e) {
+      print('Dio Error getTopRatedMovies: $e');
+      rethrow;
+    } catch (e) {
+      print('Error getTopRatedMovies: $e');
       rethrow;
     }
   }

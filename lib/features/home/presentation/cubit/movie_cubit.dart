@@ -1,3 +1,5 @@
+// lib/features/home/presentation/cubit/movie_cubit.dart
+
 import 'package:bloc/bloc.dart';
 import 'package:cinema_noir/core/api/tmdb_service.dart';
 import 'movie_state.dart';
@@ -20,14 +22,20 @@ class MovieCubit extends Cubit<MovieState> {
       final results = await Future.wait([
         _tmdbService.getNowPlayingMovies(),
         _tmdbService.getUpcomingMovies(),
+        _tmdbService.getTopRatedMovies(), // <-- TAMBAHKAN INI
       ]);
 
       // 3. Ekstrak hasilnya
       final nowPlaying = results[0];
       final upcoming = results[1];
+      final topRated = results[2]; // <-- TAMBAHKAN INI
 
       // 4. Kirim state sukses beserta datanya
-      emit(MovieLoaded(nowPlayingMovies: nowPlaying, upcomingMovies: upcoming));
+      emit(MovieLoaded(
+        nowPlayingMovies: nowPlaying,
+        upcomingMovies: upcoming,
+        topRatedMovies: topRated, // <-- TAMBAHKAN INI
+      ));
     } catch (e) {
       // 5. Jika ada error, kirim state error
       emit(MovieError(e.toString()));
