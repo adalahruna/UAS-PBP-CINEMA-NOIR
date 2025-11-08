@@ -3,15 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart'; // <-- IMPORT ini tetap ada
+// Impor CarouselSlider secara penuh (bukan sebagai alias)
+import 'package:carousel_slider/carousel_slider.dart'; 
 import 'package:cinema_noir/core/api/tmdb_service.dart';
 import 'package:cinema_noir/features/home/presentation/cubit/movie_cubit.dart';
 import 'package:cinema_noir/features/home/presentation/cubit/movie_state.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
-// import 'package:cinema_noir/features/home/presentation/widgets/poster_carousel.dart'; // Tidak terpakai
 import 'package:cinema_noir/core/constants/app_colors.dart';
-
-// --- IMPORT BARU UNTUK MOVIE MODEL ---
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 
 
@@ -23,7 +21,6 @@ class HomePage extends StatelessWidget {
     return BlocProvider(
       create: (context) => MovieCubit(TmdbService())..fetchHomeMovies(),
       child: Scaffold(
-        // PERBAIKAN: Set background di Scaffold
         backgroundColor: AppColors.darkBackground,
         body: SafeArea(
           bottom: false,
@@ -47,6 +44,10 @@ class HomePage extends StatelessWidget {
               }
 
               if (state is MovieLoaded) {
+                // --- DETEKSI UKURAN LAYAR ---
+                final double screenWidth = MediaQuery.of(context).size.width;
+                final bool isMobile = screenWidth < 768; // Breakpoint
+
                 return SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,37 +59,35 @@ class HomePage extends StatelessWidget {
                       _buildIconButtons(),
                       const SizedBox(height: 24.0),
                       
-                      // --- WIDGET IKLAN CAROUSEL BARU DITAMBAHKAN DI SINI ---
-                      _buildAdsCarousel(context), // <-- DIUBAH
+                      _buildAdsCarousel(context, isMobile: isMobile), // Kirim isMobile
                       
                       const SizedBox(height: 24.0),
 
-                      // --- SECTION 1: SEDANG TAYANG (AIRED MOVIES) ---
+                      // --- SECTION 1: SEDANG TAYANG (HOVERABLE LIST) ---
                       _buildSectionHeader(
                         title: 'Sedang Tayang',
                         onTapSeeAll: () {},
                       ),
                       const SizedBox(height: 16.0),
                       
-                      // --- PERBAIKAN: MEMANGGIL WIDGET LIST FILM ---
-                      _buildHorizontalMovieList(movies: state.nowPlayingMovies),
+                      // WIDGET BARU: Hoverable List
+                      _buildCenteredSwipeableMovieList(
+                        movies: state.nowPlayingMovies,
+                        isMobile: isMobile, 
+                      ),
                       
                       const SizedBox(height: 24.0),
 
-                      // --- SECTION 2: BARU - UPCOMING MOVIES ---
+                      // --- SECTION 2: UPCOMING MOVIES ---
                       _buildSectionHeader(
                         title: 'Akan Tayang',
                         onTapSeeAll: () {},
                       ),
                       const SizedBox(height: 16.0),
 
-                      // --- PERBAIKAN: MEMANGGIL WIDGET LIST FILM ---
                       _buildHorizontalMovieList(movies: state.upcomingMovies),
 
                       const SizedBox(height: 24.0),
-
-                      // --- SECTION 3: PROMO (Sudah diganti) ---
-                      // ...
                       
                       const SizedBox(height: 40.0),
                       
@@ -106,43 +105,44 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET BARU: CAROUSEL IKLAN (RESPONSIVE TANPA SIZER) ---
-  Widget _buildAdsCarousel(BuildContext context) {
+  // --- WIDGET BARU: CENTERED SWIPEABLE MOVIE LIST ---
+  Widget _buildCenteredSwipeableMovieList({
+    required List<MovieModel> movies,
+    required bool isMobile,
+  }) {
+    // Ambil 10 film agar bisa di-scroll
+    final limitedMovies = movies.take(10).toList(); 
+    return _HoverableMovieList(
+      movies: limitedMovies,
+      isMobile: isMobile, // Teruskan ke widget stateful
+    );
+  }
+
+  // --- WIDGET ADS CAROUSEL ---
+  Widget _buildAdsCarousel(BuildContext context, {required bool isMobile}) {
     final List<String> adImages = [
       'https://via.placeholder.com/600x350/9C27B0/FFFFFF?text=Iklan+Satu',
       'https://via.placeholder.com/600x350/2E7D32/FFFFFF?text=Iklan+Dua',
       'https://via.placeholder.com/600x350/9C27B0/FFFFFF?text=Iklan+Tiga',
       'https://via.placeholder.com/600x350/BF360C/FFFFFF?text=Iklan+Empat',
     ];
-
-    // --- LOGIKA RESPONSIVE TANPA SIZER ---
-    // 1. Dapatkan lebar layar
+    
+    final double itemsPerView = isMobile ? 1.0 : 3.0;
+    final double viewportFraction = isMobile ? 0.85 : (1.0 / itemsPerView);
     final double screenWidth = MediaQuery.of(context).size.width;
 
-    // 2. Tentukan breakpoint. 768 adalah breakpoint umum untuk tablet.
-    final bool isMobile = screenWidth < 768;
-
-    // 3. Tentukan jumlah item yang terlihat
-    // Jika mobile, tampilkan 1. Jika PC, tampilkan 3.
-    final double itemsPerView = isMobile ? 1.0 : 3.0;
-
-    // 4. Hitung viewportFraction
-    // Jika mobile, 0.85 (untuk "peek" iklan berikutnya). Jika PC, 1 / 3.
-    final double viewportFraction = isMobile ? 0.85 : (1.0 / itemsPerView);
-    // --- AKHIR LOGIKA RESPONSIVE ---
 
     return CarouselSlider.builder(
       itemCount: adImages.length,
       itemBuilder: (context, index, realIndex) {
         return Container(
-          // Gunakan persentase dari lebar layar untuk margin
-          margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
+          margin: EdgeInsets.symmetric(horizontal: screenWidth * (isMobile ? 0.02 : 0.01)),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: CachedNetworkImage(
               imageUrl: adImages[index],
               fit: BoxFit.cover,
-              width: double.infinity, // Biarkan carousel yang mengatur lebar
+              width: double.infinity,
               placeholder: (context, url) => Container(color: AppColors.darkGrey),
               errorWidget: (context, url, error) => Container(color: AppColors.darkGrey),
             ),
@@ -152,17 +152,15 @@ class HomePage extends StatelessWidget {
       options: CarouselOptions(
         height: 140.0,
         autoPlay: true,
-        // Terapkan logika responsif di sini
         viewportFraction: viewportFraction,
-        enlargeCenterPage: isMobile, // Perbesar di tengah HANYA jika mobile
+        enlargeCenterPage: isMobile, // Hanya perbesar di mobile
         autoPlayInterval: const Duration(seconds: 30),
       ),
     );
   }
 
-  // --- WIDGET BARU: LIST HORIZONTAL FILM ---
+  // --- WIDGET HORIZONTAL MOVIE LIST (untuk Upcoming) ---
   Widget _buildHorizontalMovieList({required List<MovieModel> movies}) {
-    // Ambil 10 film pertama saja
     final limitedMovies = movies.take(10).toList();
 
     return Container(
@@ -172,17 +170,13 @@ class HomePage extends StatelessWidget {
         itemCount: limitedMovies.length,
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         itemBuilder: (context, index) {
-          return _MovieListItem(movie: limitedMovies[index]);
+          return _UpcomingMovieItem(movie: limitedMovies[index]);
         },
       ),
     );
   }
-  // --- AKHIR WIDGET BARU ---
 
-  // --- WIDGET-WIDGET HELPER ---
-  // (Semua widget helper di bawah ini tetap sama, tidak perlu diubah)
-
-  /// 1. Widget untuk Header (Responsif)
+  // --- WIDGET HELPER ---
   Widget _buildCustomHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -222,7 +216,6 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
-          // --- PERMINTAAN DARI CHAT SEBELUMNYA: PROMO & PROFIL ---
           Row(
             children: [
               IconButton(
@@ -246,7 +239,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// 2. Widget untuk Search Bar (Responsif)
   Widget _buildSearchBar(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -280,7 +272,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// 3. Widget untuk Tombol Ikon Kategori (Layout 5 Ikon Sejajar)
   Widget _buildIconButtons() {
     const double iconSpacing = 12.0; 
 
@@ -320,7 +311,6 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// 4. Widget untuk Judul Section
   Widget _buildSectionHeader({
     required String title,
     required VoidCallback onTapSeeAll,
@@ -352,44 +342,7 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
-
-  /// 5. Section Promo (Ini adalah promo lama, kita ganti namanya)
-  Widget _buildPromoSection() {
-    final List<String> promoImageUrls = [
-      'https://i.imgur.com/gCaq3aJ.png',
-      'https://i.imgur.com/c4Y2K0P.png',
-      'https://i.imgur.com/kS5x87H.png',
-    ];
-
-    const double promoHeight = 140.0;
-    const double promoAspectRatio = 16 / 9;
-
-    return Container(
-      height: promoHeight,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: promoImageUrls.length,
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        itemBuilder: (context, index) {
-          return Container(
-            width: promoHeight * promoAspectRatio,
-            margin: const EdgeInsets.only(right: 12.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: CachedNetworkImage(
-                imageUrl: promoImageUrls[index],
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(color: AppColors.darkGrey),
-                errorWidget: (context, url, error) => Container(color: AppColors.darkGrey),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
   
-  /// 6. Footer
   Widget _buildFooter() {
     return Container(
       width: double.infinity,
@@ -449,7 +402,7 @@ class HomePage extends StatelessWidget {
   }
 }
 
-// --- WIDGET IKON KATEGORI (Stateful untuk Hover) ---
+// --- WIDGET IKON KATEGORI ---
 class _CategoryIcon extends StatefulWidget {
   final IconData icon;
   final String label;
@@ -510,32 +463,361 @@ class _CategoryIconState extends State<_CategoryIcon> {
   }
 }
 
-// --- WIDGET BARU UNTUK SATU ITEM FILM ---
-class _MovieListItem extends StatelessWidget {
+// --- WIDGET HOVERABLE MOVIE LIST DENGAN ARROW ---
+class _HoverableMovieList extends StatefulWidget {
+  final List<MovieModel> movies;
+  final bool isMobile; 
+  const _HoverableMovieList({
+    required this.movies,
+    required this.isMobile,
+  });
+
+  @override
+  State<_HoverableMovieList> createState() => _HoverableMovieListState();
+}
+
+class _HoverableMovieListState extends State<_HoverableMovieList> {
+  // Controller untuk Desktop ListView
+  final ScrollController _scrollController = ScrollController();
+  
+  // Controller untuk Mobile Carousel
+  final CarouselSliderController _mobileCarouselController = CarouselSliderController();
+
+  bool _isHovered = false;
+  bool _canScrollLeft = false;
+  bool _canScrollRight = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_updateScrollButtons);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateScrollButtons();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_updateScrollButtons);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _updateScrollButtons() {
+    if (!mounted) return;
+    
+    if (!widget.isMobile) {
+      bool hasOverflow = widget.movies.length > 4; 
+      setState(() {
+        _canScrollLeft = hasOverflow && _scrollController.hasClients && _scrollController.offset > 0;
+        _canScrollRight = hasOverflow && _scrollController.hasClients && 
+                          _scrollController.offset < _scrollController.position.maxScrollExtent;
+      });
+    }
+  }
+
+  void _scrollLeft() {
+    final double scrollAmount = 216.0; // 200 (item width) + 16 (spacing)
+    _scrollController.animateTo(
+      (_scrollController.offset - scrollAmount).clamp(0.0, double.infinity),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollRight() {
+    final double scrollAmount = 216.0; // 200 (item width) + 16 (spacing)
+    final double maxScroll = _scrollController.position.maxScrollExtent;
+    _scrollController.animateTo(
+      (_scrollController.offset + scrollAmount).clamp(0.0, maxScroll),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    
+    // ---------------------------------
+    // --- TAMPILAN MOBILE ---
+    // ---------------------------------
+    if (widget.isMobile) {
+      return SizedBox(
+        height: 290, // Samakan tinggi
+        child: CarouselSlider.builder(
+          carouselController: _mobileCarouselController, 
+          itemCount: widget.movies.length, // Tampilkan semua 10 film
+          itemBuilder: (context, index, realIndex) {
+            // Beri sedikit margin agar tidak terlalu mepet
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: _NowPlayingMovieItem(
+                movie: widget.movies[index],
+                index: index,
+              ),
+            );
+          },
+          options: CarouselOptions(
+            height: 290,
+            autoPlay: false,
+            enlargeCenterPage: true,
+            viewportFraction: 0.65, 
+          ),
+        ),
+      );
+    } 
+    
+    // ---------------------------------
+    // --- TAMPILAN DESKTOP ---
+    // ---------------------------------
+    else {
+      final double itemWidth = 200.0;
+      final double itemSpacing = 16.0;
+      final int visibleItems = 4;
+      final double totalVisibleWidth = (itemWidth * visibleItems) + (itemSpacing * (visibleItems - 1));
+
+      return Center(
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: Container(
+            height: 290, 
+            child: Row(
+              mainAxisSize: MainAxisSize.min, 
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                
+                AnimatedOpacity(
+                  opacity: _isHovered && _canScrollLeft ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: _HoverArrowButton(
+                    icon: Icons.arrow_back_ios,
+                    onPressed: _isHovered && _canScrollLeft ? _scrollLeft : null, 
+                  ),
+                ),
+
+                const SizedBox(width: 8), 
+
+                SizedBox(
+                  width: totalVisibleWidth, 
+                  child: ClipRect( 
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.zero, 
+                      itemCount: widget.movies.length, 
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            right: (index == widget.movies.length - 1) ? 0 : itemSpacing,
+                          ),
+                          child: SizedBox(
+                            width: itemWidth, 
+                            child: _NowPlayingMovieItem(
+                              movie: widget.movies[index],
+                              index: index,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 8), 
+
+                AnimatedOpacity(
+                  opacity: _isHovered && _canScrollRight ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: _HoverArrowButton(
+                    icon: Icons.arrow_forward_ios,
+                    onPressed: _isHovered && _canScrollRight ? _scrollRight : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+  }
+}
+
+
+// --- WIDGET ARROW BUTTON UNTUK HOVER ---
+class _HoverArrowButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback? onPressed; 
+
+  const _HoverArrowButton({
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  State<_HoverArrowButton> createState() => _HoverArrowButtonState();
+}
+
+class _HoverArrowButtonState extends State<_HoverArrowButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isActive = widget.onPressed != null;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isActive 
+            ? (_isHovered ? AppColors.gold : AppColors.gold.withOpacity(0.8))
+            : AppColors.gold.withOpacity(0.0), // Transparan jika disabled
+          shape: BoxShape.circle,
+          boxShadow: isActive ? [ 
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ] : [],
+        ),
+        child: IconButton(
+          icon: Icon(widget.icon, color: AppColors.darkBackground),
+          onPressed: widget.onPressed,
+          iconSize: 24,
+          padding: const EdgeInsets.all(12),
+          disabledColor: AppColors.darkBackground.withOpacity(0.5), 
+        ),
+      ),
+    );
+  }
+}
+
+// =========================================================================
+// --- INI ADALAH WIDGET DENGAN PERBAIKAN OVERFLOW ---
+// =========================================================================
+class _NowPlayingMovieItem extends StatelessWidget {
   final MovieModel movie;
-  const _MovieListItem({required this.movie});
+  final int index;
+  
+  const _NowPlayingMovieItem({
+    required this.movie,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Nanti: Navigasi ke detail
+        print('Navigasi ke film ${movie.title}');
+      },
+      // Hapus Column, ganti dengan Container
+      child: Container(
+        // Bungkus langsung dengan Stack
+        child: Stack(
+          children: [
+            // Gunakan Positioned.fill agar gambar mengisi seluruh area
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  imageUrl: movie.getFullPosterUrl(),
+                  fit: BoxFit.cover,
+                  // HAPUS height: 260
+                  placeholder: (context, url) => Container(
+                    // HAPUS height: 260
+                    color: AppColors.darkGrey,
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    // HAPUS height: 260
+                    color: AppColors.darkGrey,
+                    child: const Icon(Icons.error, color: AppColors.textGrey),
+                  ),
+                ),
+              ),
+            ),
+            // Tag "Advance ticket sales"
+            Positioned(
+              top: 12,
+              left: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                decoration: BoxDecoration(
+                  color: AppColors.gold,
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(8),
+                    bottomRight: Radius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Advance ticket sales',
+                  style: TextStyle(
+                    color: AppColors.darkBackground,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            // Nomor urut di pojok kanan atas
+            Positioned(
+              top: 12,
+              right: 12,
+              child: Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: const TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- WIDGET ITEM FILM (untuk Akan Tayang - UKURAN NORMAL) ---
+class _UpcomingMovieItem extends StatelessWidget {
+  final MovieModel movie;
+  const _UpcomingMovieItem({required this.movie});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
         print('Navigasi ke film ${movie.title}');
       },
       child: Container(
-        width: 140, // Lebar tetap untuk setiap item
-        margin: const EdgeInsets.only(right: 12.0), // Jarak antar item
+        width: 140,
+        margin: const EdgeInsets.only(right: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Poster
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: CachedNetworkImage(
                 imageUrl: movie.getFullPosterUrl(), 
                 fit: BoxFit.cover,
-                height: 180, // Tinggi poster
-                width: 140, // Lebar poster
+                height: 180,
+                width: 140,
                 placeholder: (context, url) => Container(
                   height: 180,
                   width: 140,
@@ -550,7 +832,6 @@ class _MovieListItem extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8.0),
-            // Judul
             Text(
               movie.title, 
               maxLines: 2,
