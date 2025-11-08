@@ -3,14 +3,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:carousel_slider/carousel_slider.dart'; // <-- IMPORT ini tetap ada
 import 'package:cinema_noir/core/api/tmdb_service.dart';
 import 'package:cinema_noir/features/home/presentation/cubit/movie_cubit.dart';
 import 'package:cinema_noir/features/home/presentation/cubit/movie_state.dart';
-// Import AuthCubit HANYA jika Anda membutuhkannya di halaman profil
-// import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
+// import 'package:cinema_noir/features/home/presentation/widgets/poster_carousel.dart'; // Tidak terpakai
 import 'package:cinema_noir/core/constants/app_colors.dart';
 
-// --- TAMBAHAN IMPORT UNTUK MOVIE MODEL ---
+// --- IMPORT BARU UNTUK MOVIE MODEL ---
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 
 
@@ -22,8 +23,8 @@ class HomePage extends StatelessWidget {
     return BlocProvider(
       create: (context) => MovieCubit(TmdbService())..fetchHomeMovies(),
       child: Scaffold(
-        // PERBAIKAN: Gunakan backgroundColor di Scaffold
-        backgroundColor: AppColors.darkBackground, 
+        // PERBAIKAN: Set background di Scaffold
+        backgroundColor: AppColors.darkBackground,
         body: SafeArea(
           bottom: false,
           child: BlocBuilder<MovieCubit, MovieState>(
@@ -56,41 +57,39 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 24.0),
                       _buildIconButtons(),
                       const SizedBox(height: 24.0),
-                      // const PosterCarousel(), // Iklan
+                      
+                      // --- WIDGET IKLAN CAROUSEL BARU DITAMBAHKAN DI SINI ---
+                      _buildAdsCarousel(context), // <-- DIUBAH
+                      
                       const SizedBox(height: 24.0),
 
                       // --- SECTION 1: SEDANG TAYANG (AIRED MOVIES) ---
                       _buildSectionHeader(
-                        title: 'Sedang Tayang', 
+                        title: 'Sedang Tayang',
                         onTapSeeAll: () {},
                       ),
                       const SizedBox(height: 16.0),
                       
-                      // --- PERBAIKAN: Memanggil widget list horizontal ---
+                      // --- PERBAIKAN: MEMANGGIL WIDGET LIST FILM ---
                       _buildHorizontalMovieList(movies: state.nowPlayingMovies),
                       
                       const SizedBox(height: 24.0),
 
                       // --- SECTION 2: BARU - UPCOMING MOVIES ---
                       _buildSectionHeader(
-                        title: 'Akan Tayang', 
+                        title: 'Akan Tayang',
                         onTapSeeAll: () {},
                       ),
                       const SizedBox(height: 16.0),
-                      
-                      // --- PERBAIKAN: Memanggil widget list horizontal ---
+
+                      // --- PERBAIKAN: MEMANGGIL WIDGET LIST FILM ---
                       _buildHorizontalMovieList(movies: state.upcomingMovies),
 
                       const SizedBox(height: 24.0),
 
-                      // --- SECTION 3: PROMO ---
-                      _buildSectionHeader(
-                        title: 'Promo menarik untuk kamu',
-                        onTapSeeAll: () {},
-                      ),
-                      const SizedBox(height: 16.0),
-                      _buildPromoSection(),
-
+                      // --- SECTION 3: PROMO (Sudah diganti) ---
+                      // ...
+                      
                       const SizedBox(height: 40.0),
                       
                       _buildFooter(),
@@ -107,21 +106,72 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET BARU UNTUK LIST FILM HORIZONTAL ---
+  // --- WIDGET BARU: CAROUSEL IKLAN (RESPONSIVE TANPA SIZER) ---
+  Widget _buildAdsCarousel(BuildContext context) {
+    final List<String> adImages = [
+      'https://via.placeholder.com/600x350/9C27B0/FFFFFF?text=Iklan+Satu',
+      'https://via.placeholder.com/600x350/2E7D32/FFFFFF?text=Iklan+Dua',
+      'https://via.placeholder.com/600x350/9C27B0/FFFFFF?text=Iklan+Tiga',
+      'https://via.placeholder.com/600x350/BF360C/FFFFFF?text=Iklan+Empat',
+    ];
+
+    // --- LOGIKA RESPONSIVE TANPA SIZER ---
+    // 1. Dapatkan lebar layar
+    final double screenWidth = MediaQuery.of(context).size.width;
+
+    // 2. Tentukan breakpoint. 768 adalah breakpoint umum untuk tablet.
+    final bool isMobile = screenWidth < 768;
+
+    // 3. Tentukan jumlah item yang terlihat
+    // Jika mobile, tampilkan 1. Jika PC, tampilkan 3.
+    final double itemsPerView = isMobile ? 1.0 : 3.0;
+
+    // 4. Hitung viewportFraction
+    // Jika mobile, 0.85 (untuk "peek" iklan berikutnya). Jika PC, 1 / 3.
+    final double viewportFraction = isMobile ? 0.85 : (1.0 / itemsPerView);
+    // --- AKHIR LOGIKA RESPONSIVE ---
+
+    return CarouselSlider.builder(
+      itemCount: adImages.length,
+      itemBuilder: (context, index, realIndex) {
+        return Container(
+          // Gunakan persentase dari lebar layar untuk margin
+          margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.01),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: CachedNetworkImage(
+              imageUrl: adImages[index],
+              fit: BoxFit.cover,
+              width: double.infinity, // Biarkan carousel yang mengatur lebar
+              placeholder: (context, url) => Container(color: AppColors.darkGrey),
+              errorWidget: (context, url, error) => Container(color: AppColors.darkGrey),
+            ),
+          ),
+        );
+      },
+      options: CarouselOptions(
+        height: 140.0,
+        autoPlay: true,
+        // Terapkan logika responsif di sini
+        viewportFraction: viewportFraction,
+        enlargeCenterPage: isMobile, // Perbesar di tengah HANYA jika mobile
+        autoPlayInterval: const Duration(seconds: 30),
+      ),
+    );
+  }
+
+  // --- WIDGET BARU: LIST HORIZONTAL FILM ---
   Widget _buildHorizontalMovieList({required List<MovieModel> movies}) {
     // Ambil 10 film pertama saja
     final limitedMovies = movies.take(10).toList();
 
     return Container(
-      // Tentukan tinggi untuk list horizontal
-      height: 230, // Cukup untuk poster (180) + teks (50)
+      height: 230,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: limitedMovies.length,
-        // Padding untuk list agar tidak menempel di tepi kiri/kanan
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         itemBuilder: (context, index) {
-          // Kirim data film ke widget item
           return _MovieListItem(movie: limitedMovies[index]);
         },
       ),
@@ -129,11 +179,10 @@ class HomePage extends StatelessWidget {
   }
   // --- AKHIR WIDGET BARU ---
 
-
   // --- WIDGET-WIDGET HELPER ---
+  // (Semua widget helper di bawah ini tetap sama, tidak perlu diubah)
 
   /// 1. Widget untuk Header (Responsif)
-  /// --- PERBAIKAN: Mengganti Logout dengan Promo & Profil ---
   Widget _buildCustomHeader(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -173,11 +222,9 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
-          
-          // --- KONTEN BARU DI KANAN ---
+          // --- PERMINTAAN DARI CHAT SEBELUMNYA: PROMO & PROFIL ---
           Row(
             children: [
-              // 1. Tombol Promo (BARU)
               IconButton(
                 icon: const Icon(Icons.local_offer_outlined, color: AppColors.textWhite),
                 tooltip: 'Promo',
@@ -185,18 +232,15 @@ class HomePage extends StatelessWidget {
                   print('Promo icon pressed!');
                 },
               ),
-              // 2. Tombol Profil (MENGGANTIKAN LOGOUT)
               IconButton(
                 icon: const Icon(Icons.person_outline, color: AppColors.gold),
                 tooltip: 'Profile',
                 onPressed: () {
-                  // Nanti navigasi ke halaman profil
                   print('Profile icon pressed!');
                 },
               ),
             ],
           ),
-          // --- AKHIR KONTEN BARU ---
         ],
       ),
     );
@@ -309,7 +353,7 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// 5. Section Promo
+  /// 5. Section Promo (Ini adalah promo lama, kita ganti namanya)
   Widget _buildPromoSection() {
     final List<String> promoImageUrls = [
       'https://i.imgur.com/gCaq3aJ.png',
@@ -467,7 +511,6 @@ class _CategoryIconState extends State<_CategoryIcon> {
 }
 
 // --- WIDGET BARU UNTUK SATU ITEM FILM ---
-// (Saya letakkan di luar class HomePage agar rapi)
 class _MovieListItem extends StatelessWidget {
   final MovieModel movie;
   const _MovieListItem({required this.movie});
@@ -489,8 +532,6 @@ class _MovieListItem extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: CachedNetworkImage(
-                // Asumsi MovieModel punya method getFullPosterUrl()
-                // Jika tidak, ganti dengan: '${ApiConstants.tmdbImageBaseUrl}${movie.posterPath}'
                 imageUrl: movie.getFullPosterUrl(), 
                 fit: BoxFit.cover,
                 height: 180, // Tinggi poster
@@ -511,7 +552,7 @@ class _MovieListItem extends StatelessWidget {
             const SizedBox(height: 8.0),
             // Judul
             Text(
-              movie.title, // Asumsi MovieModel punya properti title
+              movie.title, 
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
