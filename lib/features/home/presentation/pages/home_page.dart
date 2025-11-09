@@ -11,6 +11,9 @@ import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
+import 'package:cinema_noir/features/home/presentation/widgets/food_promo_section.dart';
+
+
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -86,6 +89,9 @@ class HomePage extends StatelessWidget {
 
                       const SizedBox(height: 24.0),
                       
+                      // SECTION 3: FOOD PROMO
+                      const FoodPromoSection(),
+
                       const SizedBox(height: 40.0),
                       
                       _buildFooter(),
