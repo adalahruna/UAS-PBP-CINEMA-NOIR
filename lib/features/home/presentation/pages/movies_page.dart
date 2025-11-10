@@ -67,8 +67,8 @@ class _MoviesPageState extends State<MoviesPage> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Color(0xFFEFF8FF),
                   AppColors.darkBackground,
+                  Color(0xFF1C1B19),
                 ],
               ),
             ),
