@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
 import 'package:cinema_noir/features/auth/presentation/pages/login_page.dart';
 import 'package:cinema_noir/features/auth/presentation/pages/register_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/home_page.dart';
+import 'package:cinema_noir/features/home/presentation/pages/movies_page.dart';
 import 'auth_stream_listener.dart'; // Import file helper kita
 
 class AppRouter {
@@ -36,6 +37,14 @@ class AppRouter {
         builder: (BuildContext post, GoRouterState state) {
           return const HomePage();
         },
+        routes: [
+          GoRoute(
+            path: 'movies',
+            builder: (BuildContext context, GoRouterState state) {
+              return const MoviesPage();
+            },
+          ),
+        ],
       ),
     ],
 

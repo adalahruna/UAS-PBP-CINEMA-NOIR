@@ -12,6 +12,7 @@ import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/food_promo_section.dart';
+import 'package:go_router/go_router.dart';
 
 
 
@@ -57,7 +58,7 @@ class HomePage extends StatelessWidget {
                       const SizedBox(height: 24.0),
                       _buildSearchBar(context),
                       const SizedBox(height: 24.0),
-                      _buildIconButtons(),
+                      _buildIconButtons(context),
                       const SizedBox(height: 24.0),
                       
                       _buildAdsCarousel(context, isMobile: isMobile),
@@ -269,37 +270,35 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildIconButtons() {
-    const double iconSpacing = 12.0;
-
-    return const Row(
+  Widget _buildIconButtons(BuildContext context) {
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _CategoryIcon(
+        const _CategoryIcon(
           icon: Icons.theaters_outlined,
           label: 'Cinemas',
           onTap: null,
         ),
-        SizedBox(width: iconSpacing),
-        _CategoryIcon(
+        const SizedBox(width: 12.0),
+        const _CategoryIcon(
           icon: Icons.people_outline,
           label: 'Community',
           onTap: null,
         ),
-        SizedBox(width: iconSpacing),
+        const SizedBox(width: 12.0),
         _CategoryIcon(
           icon: Icons.movie_creation_outlined,
           label: 'Movies',
-          onTap: null,
+          onTap: () => context.go('/movies'),
         ),
-        SizedBox(width: iconSpacing),
-        _CategoryIcon(
+        const SizedBox(width: 12.0),
+        const _CategoryIcon(
           icon: Icons.fastfood_outlined,
           label: 'm.food',
           onTap: null,
         ),
-        SizedBox(width: iconSpacing),
-        _CategoryIcon(
+        const SizedBox(width: 12.0),
+        const _CategoryIcon(
           icon: Icons.event_seat_outlined,
           label: 'Private Booking',
           onTap: null,
