@@ -30,10 +30,15 @@ class MovieCubit extends Cubit<MovieState> {
       final upcoming = results[1];
       final topRated = results[2]; // <-- TAMBAHKAN INI
 
+      final nowPlayingIds = nowPlaying.map((movie) => movie.id).toSet();
+      final filteredUpcoming = upcoming
+          .where((movie) => !nowPlayingIds.contains(movie.id))
+          .toList();
+
       // 4. Kirim state sukses beserta datanya
       emit(MovieLoaded(
         nowPlayingMovies: nowPlaying,
-        upcomingMovies: upcoming,
+        upcomingMovies: filteredUpcoming,
         topRatedMovies: topRated, // <-- TAMBAHKAN INI
       ));
     } catch (e) {

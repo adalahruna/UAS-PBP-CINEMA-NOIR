@@ -57,6 +57,15 @@ class AppRouter {
                   );
                 },
               ),
+              GoRoute(
+                path: 'ticket',
+                builder: (BuildContext context, GoRouterState state) {
+                  final extra = state.extra;
+                  return MovieTicketPage(
+                    movie: extra is MovieModel ? extra : null,
+                  );
+                },
+              ),
             ],
           ),
         ],

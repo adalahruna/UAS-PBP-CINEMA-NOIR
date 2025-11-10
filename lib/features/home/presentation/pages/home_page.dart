@@ -16,8 +16,22 @@ import 'package:go_router/go_router.dart';
 
 
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +63,8 @@ class HomePage extends StatelessWidget {
               if (state is MovieLoaded) {
                 final double screenWidth = MediaQuery.of(context).size.width;
                 final bool isMobile = screenWidth < 768;
+                final filteredNowPlaying = _filterMovies(state.nowPlayingMovies);
+                final filteredUpcoming = _filterMovies(state.upcomingMovies);
 
                 return SingleChildScrollView(
                   child: Column(
@@ -72,10 +88,17 @@ class HomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16.0),
                       
-                      _buildCenteredSwipeableMovieList(
-                        movies: state.nowPlayingMovies,
-                        isMobile: isMobile, 
-                      ),
+                      if (filteredNowPlaying.isEmpty)
+                        _buildEmptyMovieMessage('Tidak ada film yang sesuai pencarian.')
+                      else
+                        _buildCenteredSwipeableMovieList(
+                          movies: filteredNowPlaying,
+                          isMobile: isMobile,
+                          onBuyTicket: (movie) => context.push(
+                            '/movies/${movie.id}/ticket',
+                            extra: movie,
+                          ),
+                        ),
                       
                       const SizedBox(height: 24.0),
 
@@ -86,7 +109,16 @@ class HomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16.0),
 
-                      _buildHorizontalMovieList(movies: state.upcomingMovies),
+                      if (filteredUpcoming.isEmpty)
+                        _buildEmptyMovieMessage('Tidak ada film yang sesuai pencarian.')
+                      else
+                        _buildHorizontalMovieList(
+                          movies: filteredUpcoming,
+                          onBuyTicket: (movie) => context.push(
+                            '/movies/${movie.id}/ticket',
+                            extra: movie,
+                          ),
+                        ),
 
                       const SizedBox(height: 24.0),
                       
@@ -112,11 +144,13 @@ class HomePage extends StatelessWidget {
   Widget _buildCenteredSwipeableMovieList({
     required List<MovieModel> movies,
     required bool isMobile,
+    required void Function(MovieModel movie) onBuyTicket,
   }) {
     final limitedMovies = movies.take(10).toList(); 
     return _HoverableMovieList(
       movies: limitedMovies,
       isMobile: isMobile,
+      onBuyTicket: onBuyTicket,
     );
   }
 
@@ -159,7 +193,10 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHorizontalMovieList({required List<MovieModel> movies}) {
+  Widget _buildHorizontalMovieList({
+    required List<MovieModel> movies,
+    required void Function(MovieModel movie) onBuyTicket,
+  }) {
     final limitedMovies = movies.take(10).toList();
 
     return Container(
@@ -169,8 +206,32 @@ class HomePage extends StatelessWidget {
         itemCount: limitedMovies.length,
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         itemBuilder: (context, index) {
-          return _UpcomingMovieItem(movie: limitedMovies[index]);
+          final movie = limitedMovies[index];
+          return _UpcomingMovieItem(
+            movie: movie,
+            onBuyTicket: () => onBuyTicket(movie),
+          );
         },
+      ),
+    );
+  }
+
+  Widget _buildEmptyMovieMessage(String message) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        decoration: BoxDecoration(
+          color: AppColors.darkGrey,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Center(
+          child: Text(
+            message,
+            style: const TextStyle(color: AppColors.textGrey),
+          ),
+        ),
       ),
     );
   }
@@ -246,12 +307,18 @@ class HomePage extends StatelessWidget {
           maxWidth: (screenWidth * 0.85).clamp(0, 600),
         ),
         child: TextField(
+          controller: _searchController,
+          onChanged: (value) {
+            setState(() {
+              _searchQuery = value.trim();
+            });
+          },
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(
               vertical: 12.0, 
               horizontal: 16.0,
             ),
-            hintText: 'Cari film atau bioskop',
+            hintText: 'Cari film',
             hintStyle: const TextStyle(color: AppColors.textGrey),
             prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
             filled: true,
@@ -396,6 +463,21 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+
+  List<MovieModel> _filterMovies(List<MovieModel> movies) {
+    if (_searchQuery.isEmpty) {
+      return movies;
+    }
+
+    final query = _searchQuery.toLowerCase();
+    return movies
+        .where(
+          (movie) =>
+              movie.title.toLowerCase().contains(query) ||
+              movie.overview.toLowerCase().contains(query),
+        )
+        .toList();
+  }
 }
 
 // --- WIDGET IKON KATEGORI ---
@@ -463,10 +545,12 @@ class _CategoryIconState extends State<_CategoryIcon> {
 class _HoverableMovieList extends StatefulWidget {
   final List<MovieModel> movies;
   final bool isMobile;
+  final void Function(MovieModel movie) onBuyTicket;
   
   const _HoverableMovieList({
     required this.movies,
     required this.isMobile,
+    required this.onBuyTicket,
   });
 
   @override
@@ -543,10 +627,7 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
               child: _NowPlayingMovieItem(
                 movie: widget.movies[index],
                 index: index,
-                onBuyTicket: () => context.push(
-                  '/movies/${widget.movies[index].id}/ticket',
-                  extra: widget.movies[index],
-                ),
+                onBuyTicket: () => widget.onBuyTicket(widget.movies[index]),
               ),
             );
           },
@@ -605,10 +686,7 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
                             child: _NowPlayingMovieItem(
                               movie: widget.movies[index],
                               index: index,
-                              onBuyTicket: () => context.push(
-                                '/movies/${widget.movies[index].id}/ticket',
-                                extra: widget.movies[index],
-                              ),
+                              onBuyTicket: () => widget.onBuyTicket(widget.movies[index]),
                             ),
                           ),
                         );
@@ -908,7 +986,8 @@ class _NowPlayingMovieItemState extends State<_NowPlayingMovieItem> {
 // --- WIDGET UPCOMING MOVIE ITEM (DENGAN FITUR TRAILER) ---
 class _UpcomingMovieItem extends StatefulWidget {
   final MovieModel movie;
-  const _UpcomingMovieItem({required this.movie});
+  final VoidCallback? onBuyTicket;
+  const _UpcomingMovieItem({required this.movie, this.onBuyTicket});
 
   @override
   State<_UpcomingMovieItem> createState() => _UpcomingMovieItemState();
@@ -916,13 +995,22 @@ class _UpcomingMovieItem extends StatefulWidget {
 
 class _UpcomingMovieItemState extends State<_UpcomingMovieItem> {
   bool _isHovered = false;
+  bool _isLoadingTrailer = false;
 
   Future<void> _showTrailer() async {
     try {
+      setState(() {
+        _isLoadingTrailer = true;
+      });
+
       final tmdbService = TmdbService();
       final trailerKey = await tmdbService.getMovieTrailer(widget.movie.id);
 
       if (!mounted) return;
+
+      setState(() {
+        _isLoadingTrailer = false;
+      });
 
       if (trailerKey != null) {
         showDialog(
@@ -942,6 +1030,9 @@ class _UpcomingMovieItemState extends State<_UpcomingMovieItem> {
       }
     } catch (e) {
       if (!mounted) return;
+      setState(() {
+        _isLoadingTrailer = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal memuat trailer: $e'),
@@ -1015,14 +1106,70 @@ class _UpcomingMovieItemState extends State<_UpcomingMovieItem> {
                       color: Colors.black.withOpacity(0.7),
                     ),
                     child: Center(
-                      child: IconButton(
-                        onPressed: _showTrailer,
-                        icon: const Icon(
-                          Icons.play_circle_filled,
-                          size: 50,
-                          color: AppColors.gold,
-                        ),
-                      ),
+                      child: _isLoadingTrailer
+                          ? const CircularProgressIndicator(
+                              color: AppColors.gold,
+                            )
+                          : Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 140,
+                                  child: ElevatedButton.icon(
+                                    onPressed: _showTrailer,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.gold,
+                                      foregroundColor: AppColors.darkBackground,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                    ),
+                                    icon: const Icon(Icons.play_arrow, size: 18),
+                                    label: const Text(
+                                      'Trailer',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  width: 140,
+                                  child: OutlinedButton.icon(
+                                    onPressed: widget.onBuyTicket,
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.gold,
+                                      side: const BorderSide(color: AppColors.gold, width: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      backgroundColor: Colors.black.withOpacity(0.4),
+                                    ),
+                                    icon: const Icon(
+                                      Icons.confirmation_number_outlined,
+                                      size: 18,
+                                    ),
+                                    label: const Text(
+                                      'Beli Tiket',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                 ),
