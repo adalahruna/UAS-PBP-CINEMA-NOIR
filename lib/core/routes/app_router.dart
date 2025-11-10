@@ -41,7 +41,9 @@ class AppRouter {
           GoRoute(
             path: 'movies',
             builder: (BuildContext context, GoRouterState state) {
-              return const MoviesPage();
+              final category = state.uri.queryParameters['category'];
+              final showNowPlaying = category != 'upcoming';
+              return MoviesPage(showNowPlaying: showNowPlaying);
             },
           ),
         ],

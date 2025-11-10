@@ -68,7 +68,7 @@ class HomePage extends StatelessWidget {
                       // SECTION 1: SEDANG TAYANG (HOVERABLE LIST)
                       _buildSectionHeader(
                         title: 'Sedang Tayang',
-                        onTapSeeAll: () {},
+                        onTapSeeAll: () => context.go('/movies?category=now_playing'),
                       ),
                       const SizedBox(height: 16.0),
                       
@@ -82,7 +82,7 @@ class HomePage extends StatelessWidget {
                       // SECTION 2: UPCOMING MOVIES
                       _buildSectionHeader(
                         title: 'Akan Tayang',
-                        onTapSeeAll: () {},
+                        onTapSeeAll: () => context.go('/movies?category=upcoming'),
                       ),
                       const SizedBox(height: 16.0),
 
