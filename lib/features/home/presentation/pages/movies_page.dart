@@ -7,6 +7,7 @@ import 'package:cinema_noir/features/home/presentation/cubit/movie_state.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class MoviesPage extends StatefulWidget {
   final bool showNowPlaying;
@@ -424,20 +425,66 @@ class _MovieCardBodyState extends State<_MovieCardBody> {
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
-                            color: Colors.black.withOpacity(0.6),
+                            color: Colors.black.withOpacity(0.65),
                           ),
                           child: Center(
                             child: _isLoadingTrailer
                                 ? const CircularProgressIndicator(
                                     color: AppColors.gold,
                                   )
-                                : IconButton(
-                                    onPressed: _showTrailer,
-                                    icon: const Icon(
-                                      Icons.play_circle_fill,
-                                      size: 56,
-                                      color: AppColors.gold,
-                                    ),
+                                : Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: _showTrailer,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.gold,
+                                          foregroundColor: AppColors.darkBackground,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                            vertical: 12,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                        ),
+                                        icon: const Icon(Icons.play_arrow),
+                                        label: const Text(
+                                          'Nonton Trailer',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      OutlinedButton.icon(
+                                        onPressed: () => context.push(
+                                          '/movies/${widget.movie.id}/ticket',
+                                          extra: widget.movie,
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: AppColors.gold,
+                                          side: const BorderSide(color: AppColors.gold, width: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                            vertical: 12,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                          backgroundColor: Colors.black.withOpacity(0.4),
+                                        ),
+                                        icon: const Icon(Icons.confirmation_number_outlined),
+                                        label: const Text(
+                                          'Beli Tiket',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                           ),
                         ),

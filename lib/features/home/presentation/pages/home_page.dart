@@ -543,6 +543,10 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
               child: _NowPlayingMovieItem(
                 movie: widget.movies[index],
                 index: index,
+                onBuyTicket: () => context.push(
+                  '/movies/${widget.movies[index].id}/ticket',
+                  extra: widget.movies[index],
+                ),
               ),
             );
           },
@@ -601,6 +605,10 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
                             child: _NowPlayingMovieItem(
                               movie: widget.movies[index],
                               index: index,
+                              onBuyTicket: () => context.push(
+                                '/movies/${widget.movies[index].id}/ticket',
+                                extra: widget.movies[index],
+                              ),
                             ),
                           ),
                         );
@@ -683,10 +691,12 @@ class _HoverArrowButtonState extends State<_HoverArrowButton> {
 class _NowPlayingMovieItem extends StatefulWidget {
   final MovieModel movie;
   final int index;
+  final VoidCallback? onBuyTicket;
   
   const _NowPlayingMovieItem({
     required this.movie,
     required this.index,
+    this.onBuyTicket,
   });
 
   @override
@@ -789,27 +799,56 @@ class _NowPlayingMovieItemState extends State<_NowPlayingMovieItem> {
                       ? const CircularProgressIndicator(
                           color: AppColors.gold,
                         )
-                      : ElevatedButton.icon(
-                          onPressed: _showTrailer,
-                          icon: const Icon(Icons.play_arrow, size: 28),
-                          label: const Text(
-                            'Tonton Trailer',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: _showTrailer,
+                              icon: const Icon(Icons.play_arrow, size: 28),
+                              label: const Text(
+                                'Tonton Trailer',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.gold,
+                                foregroundColor: AppColors.darkBackground,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
                             ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.gold,
-                            foregroundColor: AppColors.darkBackground,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: widget.onBuyTicket,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.gold,
+                                side: const BorderSide(color: AppColors.gold, width: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                backgroundColor: Colors.black.withOpacity(0.4),
+                              ),
+                              icon: const Icon(Icons.confirmation_number_outlined),
+                              label: const Text(
+                                'Beli Tiket',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
+                          ],
                         ),
                 ),
               

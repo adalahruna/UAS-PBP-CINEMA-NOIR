@@ -5,6 +5,8 @@ import 'package:cinema_noir/features/auth/presentation/pages/login_page.dart';
 import 'package:cinema_noir/features/auth/presentation/pages/register_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/home_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/movies_page.dart';
+import 'package:cinema_noir/features/home/presentation/pages/movie_ticket_page.dart';
+import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'auth_stream_listener.dart'; // Import file helper kita
 
 class AppRouter {
@@ -45,6 +47,17 @@ class AppRouter {
               final showNowPlaying = category != 'upcoming';
               return MoviesPage(showNowPlaying: showNowPlaying);
             },
+            routes: [
+              GoRoute(
+                path: ':id/ticket',
+                builder: (BuildContext context, GoRouterState state) {
+                  final extra = state.extra;
+                  return MovieTicketPage(
+                    movie: extra is MovieModel ? extra : null,
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
