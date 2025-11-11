@@ -22,13 +22,13 @@ class MovieCubit extends Cubit<MovieState> {
       final results = await Future.wait([
         _tmdbService.getNowPlayingMovies(),
         _tmdbService.getUpcomingMovies(),
-        _tmdbService.getTopRatedMovies(), // <-- TAMBAHKAN INI
+        _tmdbService.getTopRatedMovies(), 
       ]);
 
       // 3. Ekstrak hasilnya
       final nowPlaying = results[0];
       final upcoming = results[1];
-      final topRated = results[2]; // <-- TAMBAHKAN INI
+      final topRated = results[2]; 
 
       final nowPlayingIds = nowPlaying.map((movie) => movie.id).toSet();
       final filteredUpcoming = upcoming

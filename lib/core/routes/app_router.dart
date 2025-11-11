@@ -1,43 +1,90 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Import Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cinema_noir/features/auth/presentation/pages/login_page.dart';
 import 'package:cinema_noir/features/auth/presentation/pages/register_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/home_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/movies_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/movie_ticket_page.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
-import 'auth_stream_listener.dart'; // Import file helper kita
+import 'package:cinema_noir/features/splash/presentation/pages/splash_screen.dart';
+import 'auth_stream_listener.dart';
 
 class AppRouter {
-  // Buat instance dari listener kita
   static final AuthStreamListener _authListener = AuthStreamListener();
+  static bool _splashShown = false;
 
   static final GoRouter router = GoRouter(
-    // Ubah rute awal ke '/'
-    // Biarkan redirector yang memutuskan mau dilempar ke login atau tidak
-    initialLocation: '/',
-
-    // Beri tahu GoRouter untuk mendengarkan perubahan auth
+    initialLocation: '/splash',
     refreshListenable: _authListener,
-
     routes: [
       GoRoute(
+        path: '/splash',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: SplashScreen(
+              onFinished: () {
+                _splashShown = true;
+                final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+                context.go(isLoggedIn ? '/' : '/login');
+              },
+            ),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+          );
+        },
+      ),
+      GoRoute(
         path: '/login',
-        builder: (BuildContext context, GoRouterState state) {
-          return const LoginPage();
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const LoginPage(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+          );
         },
       ),
       GoRoute(
         path: '/register',
-        builder: (BuildContext context, GoRouterState state) {
-          return const RegisterPage();
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const RegisterPage(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1.0, 0.0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              );
+            },
+          );
         },
       ),
       GoRoute(
-        path: '/', // Rute '/' adalah untuk HomePage
-        builder: (BuildContext post, GoRouterState state) {
-          return const HomePage();
+        path: '/',
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const HomePage(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+          );
         },
         routes: [
           GoRoute(
@@ -71,39 +118,36 @@ class AppRouter {
         ],
       ),
     ],
-
-    // --- LOGIKA REDIRECT ---
-    // Logika ini akan berjalan SETIAP KALI ada navigasi
-    // ATAU SETIAP KALI _authListener memberi tahu ada perubahan
     redirect: (BuildContext context, GoRouterState state) {
-      // 1. Cek status login saat ini dari Firebase
       final bool isLoggedIn = (FirebaseAuth.instance.currentUser != null);
-
-      // 2. Dapatkan lokasi yang dituju
       final String location = state.matchedLocation;
-
-      // 3. Tentukan apakah dia sedang di halaman auth
       final bool isAuthPage = (location == '/login' || location == '/register');
+      final bool isSplashPage = location == '/splash';
 
-      // --- ATURAN ---
+      // Always show splash first
+      if (!_splashShown && !isSplashPage) {
+        return '/splash';
+      }
 
-      // KASUS 1: Pengguna BELUM login
-      if (!isLoggedIn) {
-        // Jika dia mencoba akses selain halaman auth, lempar ke login
+      // Skip splash if already shown
+      if (_splashShown && isSplashPage) {
+        return isLoggedIn ? '/' : '/login';
+      }
+
+      // User not logged in
+      if (!isLoggedIn && !isSplashPage) {
         if (!isAuthPage) {
           return '/login';
         }
       }
 
-      // KASUS 2: Pengguna SUDAH login
-      if (isLoggedIn) {
-        // Jika dia mencoba akses halaman auth (login/register), lempar ke home
+      // User logged in
+      if (isLoggedIn && !isSplashPage) {
         if (isAuthPage) {
           return '/';
         }
       }
 
-      // 4. Jika tidak ada kasus di atas, biarkan (return null)
       return null;
     },
   );
