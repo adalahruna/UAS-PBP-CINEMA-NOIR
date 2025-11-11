@@ -46,9 +46,7 @@ class _LoginPageState extends State<LoginPage> {
             context: context,
             barrierDismissible: false,
             builder: (context) => const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.gold,
-              ),
+              child: CircularProgressIndicator(color: AppColors.gold),
             ),
           );
         }
@@ -93,30 +91,10 @@ class _LoginPageState extends State<LoginPage> {
                     Column(
                       children: [
                         Text(
-                          'Cine',
+                          'Cinemanoir',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            color: goldColor,
-                            height: 1.2,
-                          ),
-                        ),
-                        Text(
-                          'ma',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            color: goldColor,
-                            height: 1.2,
-                          ),
-                        ),
-                        Text(
-                          'Noir',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 34,
+                            fontSize: 45,
                             fontWeight: FontWeight.bold,
                             color: goldColor,
                             height: 1.2,
@@ -128,10 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                     Text(
                       'The show is about to begin.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     const SizedBox(height: 40.0),
 
@@ -186,11 +161,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    
-                    // --- TOMBOL GOOGLE & PEMBATAS DIHAPUS ---
-                    
-                    const SizedBox(height: 24.0), // Spasi yang sebelumnya ada
 
+                    // --- TOMBOL GOOGLE & PEMBATAS DIHAPUS ---
+                    const SizedBox(height: 24.0), // Spasi yang sebelumnya ada
                     // --- LINK KE REGISTER (Menggunakan Wrap) ---
                     Wrap(
                       alignment: WrapAlignment.center,
