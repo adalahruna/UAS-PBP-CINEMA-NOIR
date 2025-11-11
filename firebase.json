@@ -1,1 +1,33 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"uas-kelompok-1-cf6d1","appId":"1:462754702925:android:5f312563dfc87b2df25e04","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"uas-kelompok-1-cf6d1","configurations":{"android":"1:462754702925:android:5f312563dfc87b2df25e04","web":"1:462754702925:web:825195db3fdf7b07f25e04"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "uas-kelompok-1-cf6d1",
+          "appId": "1:462754702925:android:5f312563dfc87b2df25e04",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "uas-kelompok-1-cf6d1",
+          "configurations": {
+            "android": "1:462754702925:android:5f312563dfc87b2df25e04",
+            "web": "1:462754702925:web:825195db3fdf7b07f25e04"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "asia-east1"
+    }
+  }
+}
