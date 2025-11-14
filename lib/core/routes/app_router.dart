@@ -8,6 +8,7 @@ import 'package:cinema_noir/features/home/presentation/pages/movies_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/movie_ticket_page.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/splash/presentation/pages/splash_screen.dart';
+import 'package:cinema_noir/features/cinemas/presentation/pages/cinemas_page.dart';
 import 'auth_stream_listener.dart';
 
 class AppRouter {
@@ -114,6 +115,24 @@ class AppRouter {
                 },
               ),
             ],
+          ),
+          GoRoute(
+            path: 'cinemas',
+            pageBuilder: (context, state) {
+              return CustomTransitionPage(
+                key: state.pageKey,
+                child: const CinemasPage(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1.0, 0.0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  );
+                },
+              );
+            },
           ),
         ],
       ),

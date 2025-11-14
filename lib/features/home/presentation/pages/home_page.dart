@@ -341,10 +341,10 @@ class _HomePageState extends State<HomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const _CategoryIcon(
+        _CategoryIcon(
           icon: Icons.theaters_outlined,
           label: 'Cinemas',
-          onTap: null,
+          onTap: () => context.go('/cinemas'),
         ),
         const SizedBox(width: 12.0),
         const _CategoryIcon(
