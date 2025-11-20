@@ -1,9 +1,8 @@
+// File: lib/features/auth/presentation/pages/register_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sizer/sizer.dart';
-
-// Import Cubit dan State
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_state.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
@@ -18,8 +17,22 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nameController = TextEditingController(); // Field baru
+  final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isPasswordObscured = true;
+  bool _showPasswordSuffix = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() {
+      if (mounted) {
+        setState(() {
+          _showPasswordSuffix = _passwordController.text.isNotEmpty;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -31,12 +44,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _register() {
     if (_formKey.currentState!.validate()) {
-      // Panggil fungsi register dari Cubit
       context.read<AuthCubit>().register(
-        email: _emailController.text,
-        password: _passwordController.text,
-        fullName: _nameController.text,
-      );
+            email: _emailController.text,
+            password: _passwordController.text,
+            fullName: _nameController.text,
+          );
     }
   }
 
@@ -46,7 +58,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
-        // Logic listener ini SAMA PERSIS dengan LoginPage
         if (state is AuthLoading) {
           showDialog(
             context: context,
@@ -70,142 +81,156 @@ class _RegisterPageState extends State<RegisterPage> {
         }
 
         if (state is Authenticated) {
-          // GoRouter akan otomatis redirect ke Home,
-          // kita hanya perlu tutup dialog loading.
           if (ModalRoute.of(context)?.isCurrent != true) {
             Navigator.of(context, rootNavigator: true).pop();
           }
         }
       },
       child: Scaffold(
-        // Kita tambahkan AppBar agar bisa kembali ke Login
-        appBar: AppBar(
-          backgroundColor: Colors.transparent, // Transparan
-          elevation: 0,
-          iconTheme: IconThemeData(color: goldColor), // <-- INI YANG DIPERBAIKI
-        ),
         body: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 10.w),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // --- JUDUL ---
-                  Text(
-                    'Create Account',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22.sp,
-                      fontWeight: FontWeight.bold,
-                      color: goldColor,
-                    ),
-                  ),
-                  SizedBox(height: 1.h),
-                  Text(
-                    'Join the Cinema Noir family.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                  ),
-                  SizedBox(height: 5.h),
-
-                  // --- FULL NAME FIELD ---
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Full Name',
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
-                    keyboardType: TextInputType.name,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Nama tidak boleh kosong';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 2.h),
-
-                  // --- EMAIL FIELD ---
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Email tidak boleh kosong';
-                      }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return 'Email tidak valid';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 2.h),
-
-                  // --- PASSWORD FIELD ---
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Password',
-                      prefixIcon: Icon(Icons.lock_outline),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Password tidak boleh kosong';
-                      }
-                      if (value.length < 6) {
-                        return 'Password minimal 6 karakter';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 4.h),
-
-                  // --- REGISTER BUTTON ---
-                  ElevatedButton(
-                    onPressed: _register,
-                    child: Text(
-                      'Register',
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 500,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // --- JUDUL ---
+                    Text(
+                      'Cinemanoir',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 13.sp,
+                        fontSize: 45,
                         fontWeight: FontWeight.bold,
+                        color: goldColor,
+                        height: 1.2,
                       ),
                     ),
-                  ),
-                  SizedBox(height: 3.h),
+                    const SizedBox(height: 16.0),
+                    const Text(
+                      'The show is about to begin.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 40.0),
 
-                  // --- LINK KEMBALI KE LOGIN ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Already have an account?",
-                        style: TextStyle(fontSize: 11.sp),
+                    // --- FULL NAME FIELD ---
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Full Name',
+                        prefixIcon: Icon(Icons.person_outline),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          // Kembali ke halaman login
-                          context.pop();
-                        },
-                        child: Text(
-                          'Login',
-                          style: TextStyle(
-                            fontSize: 11.sp,
-                            color: goldColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      keyboardType: TextInputType.name,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Nama tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // --- EMAIL FIELD ---
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email tidak boleh kosong';
+                        }
+                        if (!value.contains('@') || !value.contains('.')) {
+                          return 'Email tidak valid';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // --- PASSWORD FIELD ---
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _isPasswordObscured,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: _showPasswordSuffix
+                            ? IconButton(
+                                icon: Icon(
+                                  _isPasswordObscured
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordObscured = !_isPasswordObscured;
+                                  });
+                                },
+                              )
+                            : null,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Password tidak boleh kosong';
+                        }
+                        if (value.length < 6) {
+                          return 'Password minimal 6 karakter';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 32.0),
+
+                    // --- REGISTER BUTTON ---
+                    ElevatedButton(
+                      onPressed: _register,
+                      child: const Text(
+                        'Register',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 24.0),
+
+                    // --- LINK KEMBALI KE LOGIN ---
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        const Text(
+                          "Already have an account?",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            context.pop();
+                          },
+                          child: Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: goldColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

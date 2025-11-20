@@ -18,6 +18,20 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _isPasswordObscured = true;
+  bool _showPasswordSuffix = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() {
+      if (mounted) {
+        setState(() {
+          _showPasswordSuffix = _passwordController.text.isNotEmpty;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -133,10 +147,24 @@ class _LoginPageState extends State<LoginPage> {
                     // --- PASSWORD FIELD ---
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _isPasswordObscured,
+                      decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: Icon(Icons.lock_outline),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: _showPasswordSuffix
+                            ? IconButton(
+                                icon: Icon(
+                                  _isPasswordObscured
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _isPasswordObscured = !_isPasswordObscured;
+                                  });
+                                },
+                              )
+                            : null,
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {

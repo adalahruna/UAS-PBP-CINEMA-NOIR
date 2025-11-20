@@ -9,6 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+enum SortOption {
+  releaseDate,
+  alphabeticalAZ,
+  alphabeticalZA,
+}
+
 class MoviesPage extends StatefulWidget {
   final bool showNowPlaying;
 
@@ -24,11 +30,13 @@ class MoviesPage extends StatefulWidget {
 class _MoviesPageState extends State<MoviesPage> {
   String _searchQuery = '';
   late bool _showNowPlaying;
+  SortOption? _sortOption;
 
   @override
   void initState() {
     super.initState();
     _showNowPlaying = widget.showNowPlaying;
+    _sortOption = SortOption.releaseDate;
   }
 
   @override
@@ -96,7 +104,7 @@ class _MoviesPageState extends State<MoviesPage> {
                   final movies = _showNowPlaying
                       ? state.nowPlayingMovies
                       : state.upcomingMovies;
-                  final filteredMovies = _filterMovies(movies);
+                  final filteredMovies = _filterAndSortMovies(movies);
                   final sectionTitle =
                       _showNowPlaying ? 'Sedang Tayang' : 'Akan Tayang';
 
@@ -118,6 +126,8 @@ class _MoviesPageState extends State<MoviesPage> {
                         _buildCategoryToggle(),
                         const SizedBox(height: 20),
                         _buildSearchField(context),
+                        const SizedBox(height: 16),
+                        _buildSortDropdown(),
                         const SizedBox(height: 24),
                         Text(
                           sectionTitle,
@@ -157,6 +167,87 @@ class _MoviesPageState extends State<MoviesPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildSortDropdown() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        const Text(
+          'Urutkan:',
+          style: TextStyle(color: AppColors.textGrey, fontSize: 14),
+        ),
+        const SizedBox(width: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          decoration: BoxDecoration(
+            color: AppColors.darkGrey,
+            borderRadius: BorderRadius.circular(20.0),
+            border: Border.all(color: AppColors.gold, width: 1),
+          ),
+          child: DropdownButton<SortOption>(
+            value: _sortOption,
+            hint: const Text('Pilih Opsi', style: TextStyle(color: AppColors.textGrey)),
+            dropdownColor: AppColors.darkGrey,
+            underline: const SizedBox(),
+            icon: const Icon(Icons.arrow_drop_down, color: AppColors.gold),
+            onChanged: (SortOption? newValue) {
+              setState(() {
+                _sortOption = newValue;
+              });
+            },
+            items: const [
+              DropdownMenuItem(
+                value: SortOption.releaseDate,
+                child: Text('Tanggal Tayang: Terbaru', style: TextStyle(color: AppColors.textWhite)),
+              ),
+              DropdownMenuItem(
+                value: SortOption.alphabeticalAZ,
+                child: Text('Abjad A-Z', style: TextStyle(color: AppColors.textWhite)),
+              ),
+              DropdownMenuItem(
+                value: SortOption.alphabeticalZA,
+                child: Text('Abjad Z-A', style: TextStyle(color: AppColors.textWhite)),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<MovieModel> _filterAndSortMovies(List<MovieModel> movies) {
+    List<MovieModel> filteredMovies;
+
+    // Filtering logic
+    if (_searchQuery.isEmpty) {
+      filteredMovies = List<MovieModel>.from(movies);
+    } else {
+      filteredMovies = movies
+          .where((movie) => movie.title.toLowerCase().contains(_searchQuery))
+          .toList();
+    }
+
+    // Sorting logic
+    if (_sortOption != null) {
+      filteredMovies.sort((a, b) {
+        switch (_sortOption) {
+          case SortOption.alphabeticalAZ:
+            return a.title.compareTo(b.title);
+          case SortOption.alphabeticalZA:
+            return b.title.compareTo(a.title);
+          case SortOption.releaseDate:
+            if (a.releaseDate == null && b.releaseDate == null) return 0;
+            if (a.releaseDate == null) return 1;
+            if (b.releaseDate == null) return -1;
+            return b.releaseDate!.compareTo(a.releaseDate!);
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return filteredMovies;
   }
 
   Widget _buildCategoryToggle() {
@@ -223,16 +314,6 @@ class _MoviesPageState extends State<MoviesPage> {
         ),
       ),
     );
-  }
-
-  List<MovieModel> _filterMovies(List<MovieModel> movies) {
-    if (_searchQuery.isEmpty) {
-      return movies;
-    }
-
-    return movies
-        .where((movie) => movie.title.toLowerCase().contains(_searchQuery))
-        .toList();
   }
 }
 
