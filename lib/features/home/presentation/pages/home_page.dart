@@ -16,6 +16,7 @@ import 'package:go_router/go_router.dart';
 
 
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -139,6 +140,20 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+  List<MovieModel> _filterMovies(List<MovieModel> movies) {
+    if (_searchQuery.isEmpty) {
+      return movies;
+    }
+
+    final query = _searchQuery.toLowerCase();
+    return movies
+        .where(
+          (movie) =>
+              movie.title.toLowerCase().contains(query) ||
+              movie.overview.toLowerCase().contains(query),
+        )
+        .toList();
   }
 
   Widget _buildCenteredSwipeableMovieList({
@@ -464,20 +479,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<MovieModel> _filterMovies(List<MovieModel> movies) {
-    if (_searchQuery.isEmpty) {
-      return movies;
-    }
 
-    final query = _searchQuery.toLowerCase();
-    return movies
-        .where(
-          (movie) =>
-              movie.title.toLowerCase().contains(query) ||
-              movie.overview.toLowerCase().contains(query),
-        )
-        .toList();
-  }
 }
 
 // --- WIDGET IKON KATEGORI ---

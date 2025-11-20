@@ -7,6 +7,7 @@ class MovieModel extends Equatable {
   final String overview;
   final String? posterPath;
   final double voteAverage;
+  final String? releaseDate; // TAMBAHKAN INI
   final String? trailerKey; // TAMBAHKAN INI
 
   const MovieModel({
@@ -15,6 +16,7 @@ class MovieModel extends Equatable {
     required this.overview,
     this.posterPath,
     required this.voteAverage,
+    this.releaseDate, // TAMBAHKAN INI
     this.trailerKey, // TAMBAHKAN INI
   });
 
@@ -25,6 +27,7 @@ class MovieModel extends Equatable {
       overview: json['overview'] as String,
       posterPath: json['poster_path'] as String?,
       voteAverage: (json['vote_average'] as num).toDouble(),
+      releaseDate: json['release_date'] as String?, // TAMBAHKAN INI
       trailerKey: null, // Akan diisi kemudian dari API videos
     );
   }
@@ -36,6 +39,7 @@ class MovieModel extends Equatable {
     String? overview,
     String? posterPath,
     double? voteAverage,
+    String? releaseDate,
     String? trailerKey,
   }) {
     return MovieModel(
@@ -44,6 +48,7 @@ class MovieModel extends Equatable {
       overview: overview ?? this.overview,
       posterPath: posterPath ?? this.posterPath,
       voteAverage: voteAverage ?? this.voteAverage,
+      releaseDate: releaseDate ?? this.releaseDate,
       trailerKey: trailerKey ?? this.trailerKey,
     );
   }
@@ -56,5 +61,5 @@ class MovieModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, title, overview, posterPath, voteAverage, trailerKey];
+  List<Object?> get props => [id, title, overview, posterPath, voteAverage, releaseDate, trailerKey];
 }
