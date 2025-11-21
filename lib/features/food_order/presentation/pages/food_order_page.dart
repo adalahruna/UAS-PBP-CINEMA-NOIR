@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/food_order/data/models/food_model.dart';
+
+// --- Import Widget Terpisah ---
 import 'package:cinema_noir/features/food_order/presentation/widgets/food_promo_carousel.dart';
 import 'package:cinema_noir/features/food_order/presentation/widgets/hot_items_carousel.dart';
 import 'package:cinema_noir/features/food_order/presentation/widgets/food_category_buttons.dart';
@@ -17,15 +19,16 @@ class FoodOrderPage extends StatefulWidget {
 
 class _FoodOrderPageState extends State<FoodOrderPage> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
 
-  // State Kategori Aktif (Default 'all')
   String _selectedCategory = 'all';
-
-  // Keranjang Belanja
-  // Key: Food ID, Value: Jumlah (Qty)
   final Map<String, int> _cart = {};
 
-  // Data Dummy Menu (Lengkap & Menarik)
+  // State untuk mode pencarian
+  bool _isSearching = false;
+  String _searchQuery = '';
+
+  // Data Dummy Menu (Lengkap)
   final List<FoodModel> _allFoods = [
     const FoodModel(
       id: '1',
@@ -99,10 +102,41 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     ),
   ];
 
+  // List untuk menampung hasil pencarian
+  List<FoodModel> _filteredFoods = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredFoods = _allFoods; // Awalnya tampilkan semua
+    _searchController.addListener(_onSearchChanged);
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text;
+      _isSearching = _searchQuery.isNotEmpty;
+
+      if (_isSearching) {
+        // Filter berdasarkan query pencarian
+        _filteredFoods = _allFoods
+            .where(
+              (food) =>
+                  food.name.toLowerCase().contains(_searchQuery.toLowerCase()),
+            )
+            .toList();
+      } else {
+        // Jika kosong, kembalikan ke semua (tapi UI akan berubah ke mode normal)
+        _filteredFoods = _allFoods;
+      }
+    });
   }
 
   String _formatCurrency(int amount) {
@@ -174,98 +208,171 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              // TODO: Implement Search Logic Here
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Fitur pencarian segera hadir!')),
-              );
-            },
-          ),
-        ],
       ),
 
       body: Stack(
         children: [
-          // Konten Halaman (Scrollable)
           SingleChildScrollView(
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 10),
-
-                // 1. PROMO CAROUSEL (Widget Terpisah)
-                const FoodPromoCarousel(),
-
-                const SizedBox(height: 24),
-
-                // 2. HOT ITEMS (Widget Terpisah)
+                // 1. SEARCH BAR (Selalu Muncul di Atas)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: const [
-                      Icon(
-                        Icons.local_fire_department,
-                        color: Colors.orangeAccent,
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.darkGrey,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: _isSearching ? AppColors.gold : Colors.white10,
+                        width: 1,
                       ),
-                      SizedBox(width: 8),
-                      Text(
-                        'Lagi Hot Nih!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Cari popcorn, minuman...',
+                        hintStyle: TextStyle(
+                          color: AppColors.textGrey.withOpacity(0.5),
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: _isSearching
+                              ? AppColors.gold
+                              : AppColors.textGrey,
+                        ),
+                        suffixIcon: _isSearching
+                            ? IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  // FocusScope.of(context).unfocus(); // Opsional: tutup keyboard
+                                },
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 15,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                HotItemsCarousel(foods: _allFoods, onAdd: _incrementItem),
-
-                const SizedBox(height: 24),
-
-                // 3. KATEGORI SIMETRIS (Widget Terpisah)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: const Text(
-                    'Jelajahi Menu',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 16),
-                FoodCategoryButtons(
-                  selectedCategory: _selectedCategory,
-                  onCategorySelected: (category) {
-                    setState(() {
-                      _selectedCategory = category;
-                    });
-                  },
-                ),
 
-                const SizedBox(height: 24),
+                // 2. DYNAMIC CONTENT
+                // Jika sedang mencari (_isSearching == true), TAMPILKAN HASIL PENCARIAN
+                // Jika tidak, TAMPILKAN CAROUSEL & KATEGORI (Normal Mode)
+                if (_isSearching) ...[
+                  // --- MODE PENCARIAN ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.manage_search, color: AppColors.gold),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Hasil Pencarian: "$_searchQuery"',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
-                // 4. LIST MENU VERTIKAL (Filtered)
-                _buildFoodList(),
+                  // Tampilkan List Hasil Filter
+                  _buildFoodList(isSearchResult: true),
+                ] else ...[
+                  // --- MODE NORMAL ---
+
+                  // Promo Carousel
+                  const FoodPromoCarousel(),
+
+                  const SizedBox(height: 24),
+
+                  // Hot Items
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: const [
+                        Icon(
+                          Icons.local_fire_department,
+                          color: Colors.orangeAccent,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Lagi Hot Nih!',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  HotItemsCarousel(foods: _allFoods, onAdd: _incrementItem),
+
+                  const SizedBox(height: 24),
+
+                  // Kategori
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: const Text(
+                      'Jelajahi Menu',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FoodCategoryButtons(
+                    selectedCategory: _selectedCategory,
+                    onCategorySelected: (category) {
+                      setState(() {
+                        _selectedCategory = category;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // List Menu Normal
+                  _buildFoodList(isSearchResult: false),
+                ],
 
                 const SizedBox(height: 100), // Padding Bawah untuk Cart
               ],
             ),
           ),
 
-          // Floating Cart (Keranjang Melayang)
+          // Floating Cart
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            bottom: hasItems ? 30 : -100, // Sembunyi jika kosong
+            bottom: hasItems ? 30 : -100,
             left: 20,
             right: 20,
             child: _buildFloatingCart(),
@@ -275,38 +382,60 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     );
   }
 
-  // --- LIST BUILDER (Filtered by Button Category) ---
-  Widget _buildFoodList() {
-    final foods = _selectedCategory == 'all'
-        ? _allFoods
-        : _allFoods.where((f) => f.category == _selectedCategory).toList();
+  // --- LIST BUILDER ---
+  Widget _buildFoodList({required bool isSearchResult}) {
+    // Logic pemilihan data sumber
+    List<FoodModel> foodsToShow;
 
-    if (foods.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(32.0),
+    if (isSearchResult) {
+      // Jika mode pencarian, pakai data yang sudah difilter text
+      foodsToShow = _filteredFoods;
+    } else {
+      // Jika mode normal, filter berdasarkan kategori tombol
+      foodsToShow = _selectedCategory == 'all'
+          ? _allFoods
+          : _allFoods.where((f) => f.category == _selectedCategory).toList();
+    }
+
+    if (foodsToShow.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
         child: Center(
-          child: Text(
-            "Menu kosong untuk kategori ini",
-            style: TextStyle(color: Colors.grey),
+          child: Column(
+            children: [
+              Icon(
+                Icons.search_off,
+                size: 64,
+                color: AppColors.textGrey.withOpacity(0.5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isSearchResult ? "Menu tidak ditemukan" : "Kategori ini kosong",
+                style: TextStyle(
+                  color: AppColors.textGrey.withOpacity(0.5),
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
         ),
       );
     }
 
     return ListView.separated(
-      shrinkWrap: true, // Agar bisa di dalam SingleChildScrollView
-      physics: const NeverScrollableScrollPhysics(), // Scroll ikut parent
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: foods.length,
+      itemCount: foodsToShow.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
-        final food = foods[index];
+        final food = foodsToShow[index];
         return _buildFoodListItem(food);
       },
     );
   }
 
-  // --- KARTU MENU VERTIKAL (Custom Widget di dalam file ini) ---
+  // --- KARTU MENU VERTIKAL ---
   Widget _buildFoodListItem(FoodModel food) {
     final qty = _cart[food.id] ?? 0;
     final bool isSelected = qty > 0;
@@ -394,8 +523,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                           fontSize: 15,
                         ),
                       ),
-
-                      // Tombol ADD / Counter
                       if (qty == 0)
                         GestureDetector(
                           onTap: () => _incrementItem(food),
@@ -473,7 +600,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
   Widget _buildFloatingCart() {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to Checkout
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Fitur Checkout akan segera hadir!')),
         );

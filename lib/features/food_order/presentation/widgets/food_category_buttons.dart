@@ -23,62 +23,75 @@ class FoodCategoryButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: 90,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 16),
-        itemBuilder: (context, index) {
-          final cat = categories[index];
-          final isSelected = selectedCategory == cat['id'];
+      // Menggunakan Center dan SingleChildScrollView agar tombol berada di tengah
+      // tapi tetap bisa di-scroll jika layar terlalu kecil/sempit.
+      child: Center(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize:
+                MainAxisSize.min, // Agar Row menyesuaikan lebar konten
+            children: categories.map((cat) {
+              final isSelected = selectedCategory == cat['id'];
+              // Tambahkan jarak antar item (kecuali item terakhir)
+              final isLast = cat == categories.last;
 
-          return GestureDetector(
-            onTap: () => onCategorySelected(cat['id']),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppColors.gold : AppColors.darkGrey,
-                    borderRadius: BorderRadius.circular(
-                      20,
-                    ), // Bentuk Squircle Modern
-                    boxShadow: [
-                      if (isSelected)
-                        BoxShadow(
-                          color: AppColors.gold.withOpacity(0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+              return Padding(
+                padding: EdgeInsets.only(right: isLast ? 0 : 16),
+                child: GestureDetector(
+                  onTap: () => onCategorySelected(cat['id']),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.gold
+                              : AppColors.darkGrey,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            if (isSelected)
+                              BoxShadow(
+                                color: AppColors.gold.withOpacity(0.4),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                          ],
+                          border: Border.all(
+                            color: isSelected ? AppColors.gold : Colors.white10,
+                            width: 1,
+                          ),
                         ),
+                        child: Icon(
+                          cat['icon'],
+                          color: isSelected ? Colors.black : AppColors.textGrey,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        cat['label'],
+                        style: TextStyle(
+                          color: isSelected
+                              ? AppColors.gold
+                              : AppColors.textGrey,
+                          fontSize: 12,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
                     ],
-                    border: Border.all(
-                      color: isSelected ? AppColors.gold : Colors.white10,
-                      width: 1,
-                    ),
-                  ),
-                  child: Icon(
-                    cat['icon'],
-                    color: isSelected ? Colors.black : AppColors.textGrey,
-                    size: 24,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  cat['label'],
-                  style: TextStyle(
-                    color: isSelected ? AppColors.gold : AppColors.textGrey,
-                    fontSize: 12,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }
