@@ -311,7 +311,7 @@ class _HomePageState extends State<HomePage> {
                 icon: const Icon(Icons.person_outline, color: AppColors.gold),
                 tooltip: 'Profile',
                 onPressed: () {
-                  print('Profile icon pressed!');
+                  context.go('/profile');
                 },
               ),
             ],

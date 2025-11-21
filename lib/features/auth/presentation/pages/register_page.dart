@@ -1,4 +1,3 @@
-// File: lib/features/auth/presentation/pages/register_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,219 +14,166 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final _formKey = GlobalKey<FormState>();
+  
+  // Controllers
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-  bool _isPasswordObscured = true;
-  bool _showPasswordSuffix = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _passwordController.addListener(() {
-      if (mounted) {
-        setState(() {
-          _showPasswordSuffix = _passwordController.text.isNotEmpty;
-        });
-      }
-    });
-  }
+  final _confirmPassController = TextEditingController();
+  
+  bool _obscurePass = true;
+  bool _obscureConfirm = true;
+  bool _showPasswordHelperText = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _nameController.dispose();
+    _confirmPassController.dispose();
     super.dispose();
   }
 
-  void _register() {
+  // Validasi Regex: Min 8 char, minimal 1 angka
+  bool _isPasswordValid(String pass) {
+    final RegExp regex = RegExp(r'^(?=.*[0-9]).{8,}$');
+    return regex.hasMatch(pass);
+  }
+
+  void _onRegister() {
     if (_formKey.currentState!.validate()) {
       context.read<AuthCubit>().register(
-            email: _emailController.text,
-            password: _passwordController.text,
-            fullName: _nameController.text,
-          );
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        fullName: _nameController.text.trim(),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final Color goldColor = Theme.of(context).primaryColor;
+    final primaryColor = Theme.of(context).primaryColor;
 
-    return BlocListener<AuthCubit, AuthState>(
-      listener: (context, state) {
-        if (state is AuthLoading) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => const Center(
-              child: CircularProgressIndicator(color: AppColors.gold),
-            ),
-          );
-        }
-
-        if (state is Unauthenticated) {
-          if (ModalRoute.of(context)?.isCurrent != true) {
-            Navigator.of(context, rootNavigator: true).pop();
-          }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message ?? 'Registrasi Gagal.'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-        }
-
-        if (state is Authenticated) {
-          if (ModalRoute.of(context)?.isCurrent != true) {
-            Navigator.of(context, rootNavigator: true).pop();
-          }
-        }
-      },
-      child: Scaffold(
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 500,
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32.0,
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: const BackButton(), // Tombol kembali ke Login
+      ),
+      body: BlocListener<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is AuthLoading) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.gold)),
+            );
+          } else if (state is Unauthenticated) {
+            // Tutup dialog loading jika ada
+            if (Navigator.canPop(context)) Navigator.pop(context);
+            
+            final isSuccess = state.message?.toLowerCase().contains('berhasil') ?? false;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message ?? 'Error'),
+                backgroundColor: isSuccess ? Colors.green : Colors.red,
               ),
+            );
+
+            // Jika sukses register, arahkan kembali ke login
+            if (isSuccess) context.go('/login');
+          }
+        },
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // --- JUDUL ---
                     Text(
-                      'Cinemanoir',
+                      'Create Account', 
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 45,
-                        fontWeight: FontWeight.bold,
-                        color: goldColor,
-                        height: 1.2,
-                      ),
+                      style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primaryColor)
                     ),
-                    const SizedBox(height: 16.0),
-                    const Text(
-                      'The show is about to begin.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 40.0),
+                    const SizedBox(height: 40),
 
-                    // --- FULL NAME FIELD ---
+                    // Nama Lengkap
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Full Name',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      keyboardType: TextInputType.name,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Nama tidak boleh kosong';
-                        }
-                        return null;
-                      },
+                      decoration: const InputDecoration(labelText: 'Nama Lengkap', prefixIcon: Icon(Icons.person)),
+                      validator: (v) => v!.isEmpty ? 'Nama wajib diisi' : null,
                     ),
-                    const SizedBox(height: 16.0),
+                    const SizedBox(height: 16),
 
-                    // --- EMAIL FIELD ---
+                    // Email
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
                       keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Email tidak boleh kosong';
-                        }
-                        if (!value.contains('@') || !value.contains('.')) {
-                          return 'Email tidak valid';
-                        }
-                        return null;
-                      },
+                      decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
+                      validator: (v) => (!v!.contains('@') || !v.contains('.')) ? 'Format email salah' : null,
                     ),
-                    const SizedBox(height: 16.0),
+                    const SizedBox(height: 16),
 
-                    // --- PASSWORD FIELD ---
+                    // Password
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: _isPasswordObscured,
+                      obscureText: _obscurePass,
+                      onChanged: (value) {
+                        final bool shouldShow = value.isNotEmpty;
+                        if (shouldShow != _showPasswordHelperText) {
+                          setState(() {
+                            _showPasswordHelperText = shouldShow;
+                          });
+                        }
+                      },
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: _showPasswordSuffix
-                            ? IconButton(
-                                icon: Icon(
-                                  _isPasswordObscured
-                                      ? Icons.visibility_off_outlined
-                                      : Icons.visibility_outlined,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _isPasswordObscured = !_isPasswordObscured;
-                                  });
-                                },
-                              )
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePass ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => _obscurePass = !_obscurePass),
+                        ),
+                        helperText: _showPasswordHelperText
+                            ? 'Min. 8 karakter & mengandung angka'
                             : null,
+                        helperMaxLines: 2,
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password tidak boleh kosong';
-                        }
-                        if (value.length < 6) {
-                          return 'Password minimal 6 karakter';
-                        }
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'Password wajib diisi';
+                        if (!_isPasswordValid(v)) return 'Harus min. 8 huruf & ada angka';
                         return null;
                       },
                     ),
-                    const SizedBox(height: 32.0),
+                    const SizedBox(height: 16),
 
-                    // --- REGISTER BUTTON ---
-                    ElevatedButton(
-                      onPressed: _register,
-                      child: const Text(
-                        'Register',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                    // Konfirmasi Password
+                    TextFormField(
+                      controller: _confirmPassController,
+                      obscureText: _obscureConfirm,
+                      decoration: InputDecoration(
+                        labelText: 'Ulangi Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureConfirm ? Icons.visibility : Icons.visibility_off),
+                          onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
                         ),
                       ),
+                      validator: (v) {
+                        if (v != _passwordController.text) return 'Password tidak sama';
+                        return null;
+                      },
                     ),
-                    const SizedBox(height: 24.0),
+                    const SizedBox(height: 32),
 
-                    // --- LINK KEMBALI KE LOGIN ---
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        const Text(
-                          "Already have an account?",
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            context.pop();
-                          },
-                          child: Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: goldColor,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
+                    ElevatedButton(
+                      onPressed: _onRegister,
+                      style: ElevatedButton.styleFrom(minimumSize: const Size(0, 50)),
+                      child: const Text('Register'),
                     ),
                   ],
                 ),

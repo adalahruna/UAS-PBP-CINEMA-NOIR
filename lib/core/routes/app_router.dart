@@ -11,6 +11,7 @@ import 'package:cinema_noir/features/splash/presentation/pages/splash_screen.dar
 import 'package:cinema_noir/features/cinemas/presentation/pages/cinemas_page.dart';
 import 'auth_stream_listener.dart';
 import 'package:cinema_noir/features/home/presentation/pages/my_orders_page.dart';
+import 'package:cinema_noir/features/home/presentation/pages/profile_page.dart';
 
 class AppRouter {
   static final AuthStreamListener _authListener = AuthStreamListener();
@@ -56,6 +57,12 @@ class AppRouter {
           );
         },
       ),
+      GoRoute(
+             path: '/profile',
+             builder: (BuildContext context, GoRouterState state) {
+               return const ProfilePage();
+             },
+           ),
       GoRoute(
         path: '/register',
         pageBuilder: (context, state) {
