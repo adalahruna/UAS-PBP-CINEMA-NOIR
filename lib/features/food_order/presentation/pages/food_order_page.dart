@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/food_order/data/models/food_model.dart';
+import 'package:cinema_noir/features/food_order/presentation/widgets/food_promo_carousel.dart';
+import 'package:cinema_noir/features/food_order/presentation/widgets/hot_items_carousel.dart';
+import 'package:cinema_noir/features/food_order/presentation/widgets/food_category_buttons.dart';
 
 class FoodOrderPage extends StatefulWidget {
   const FoodOrderPage({super.key});
@@ -12,21 +15,22 @@ class FoodOrderPage extends StatefulWidget {
   State<FoodOrderPage> createState() => _FoodOrderPageState();
 }
 
-class _FoodOrderPageState extends State<FoodOrderPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _FoodOrderPageState extends State<FoodOrderPage> {
   final ScrollController _scrollController = ScrollController();
 
+  // State Kategori Aktif (Default 'all')
+  String _selectedCategory = 'all';
+
   // Keranjang Belanja
+  // Key: Food ID, Value: Jumlah (Qty)
   final Map<String, int> _cart = {};
 
-  // Data Dummy Menu (Lengkap)
+  // Data Dummy Menu (Lengkap & Menarik)
   final List<FoodModel> _allFoods = [
     const FoodModel(
       id: '1',
       name: 'Combo Couple Date',
-      description:
-          'Paket lengkap untuk berdua: 1 Large Popcorn + 2 Coca Cola + 1 Nachos Cheese.',
+      description: '1 Large Popcorn + 2 Coca Cola + 1 Nachos Cheese.',
       price: 85000,
       category: 'combo',
       imageUrl:
@@ -36,8 +40,7 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     const FoodModel(
       id: '2',
       name: 'Caramel Popcorn XL',
-      description:
-          'Popcorn renyah dengan lapisan karamel manis premium yang melimpah.',
+      description: 'Popcorn renyah dengan lapisan karamel manis premium.',
       price: 55000,
       category: 'popcorn',
       imageUrl:
@@ -47,7 +50,7 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     const FoodModel(
       id: '3',
       name: 'Salty Popcorn',
-      description: 'Popcorn gurih original bioskop dengan butter asli.',
+      description: 'Popcorn gurih original bioskop.',
       price: 40000,
       category: 'popcorn',
       imageUrl:
@@ -57,7 +60,7 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     const FoodModel(
       id: '4',
       name: 'Coca Cola Large',
-      description: 'Minuman bersoda dingin ukuran besar menyegarkan dahaga.',
+      description: 'Minuman bersoda dingin menyegarkan.',
       price: 25000,
       category: 'drink',
       imageUrl:
@@ -67,7 +70,7 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     const FoodModel(
       id: '5',
       name: 'Iced Lemon Tea',
-      description: 'Teh lemon segar dengan irisan lemon asli dan es batu.',
+      description: 'Teh lemon segar dengan es batu.',
       price: 30000,
       category: 'drink',
       imageUrl:
@@ -77,7 +80,7 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     const FoodModel(
       id: '6',
       name: 'Nachos Cheese',
-      description: 'Keripik tortilla renyah disiram dengan saus keju meleleh.',
+      description: 'Keripik tortilla renyah saus keju.',
       price: 50000,
       category: 'snack',
       imageUrl:
@@ -87,8 +90,7 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     const FoodModel(
       id: '7',
       name: 'Hotdog Beef',
-      description:
-          'Roti sosis sapi panggang premium dengan saus mustard dan mayones.',
+      description: 'Roti sosis sapi panggang.',
       price: 45000,
       category: 'snack',
       imageUrl:
@@ -98,14 +100,7 @@ class _FoodOrderPageState extends State<FoodOrderPage>
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 5, vsync: this);
-  }
-
-  @override
   void dispose() {
-    _tabController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -118,7 +113,7 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     ).format(amount);
   }
 
-  // --- Logic Keranjang ---
+  // --- LOGIC KERANJANG ---
   void _incrementItem(FoodModel food) {
     setState(() {
       _cart[food.id] = (_cart[food.id] ?? 0) + 1;
@@ -158,78 +153,119 @@ class _FoodOrderPageState extends State<FoodOrderPage>
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
+      appBar: AppBar(
+        backgroundColor: AppColors.darkBackground,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.gold,
+            size: 20,
+          ),
+          onPressed: () => context.pop(),
+        ),
+        title: const Text(
+          'm.food',
+          style: TextStyle(
+            color: AppColors.gold,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Montserrat',
+            letterSpacing: 1.2,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: () {
+              // TODO: Implement Search Logic Here
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Fitur pencarian segera hadir!')),
+              );
+            },
+          ),
+        ],
+      ),
+
       body: Stack(
         children: [
-          // NestedScrollView untuk efek parallax header
-          NestedScrollView(
-            headerSliverBuilder: (context, innerBoxIsScrolled) {
-              return [
-                SliverAppBar(
-                  backgroundColor: AppColors.darkBackground,
-                  expandedHeight: 120.0,
-                  floating: true,
-                  pinned: true,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      color: AppColors.gold,
-                      size: 20,
-                    ),
-                    onPressed: () => context.pop(),
-                  ),
-                  title: const Text(
-                    'm.food',
-                    style: TextStyle(
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Montserrat',
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  centerTitle: true,
-                  bottom: TabBar(
-                    controller: _tabController,
-                    indicatorColor: AppColors.gold,
-                    indicatorWeight: 3,
-                    indicatorSize: TabBarIndicatorSize.label,
-                    labelColor: AppColors.gold,
-                    unselectedLabelColor: AppColors.textGrey,
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                    isScrollable: true,
-                    physics: const BouncingScrollPhysics(),
-                    overlayColor: MaterialStateProperty.all(Colors.transparent),
-                    tabs: const [
-                      Tab(text: 'All Menu'),
-                      Tab(text: 'Combo'),
-                      Tab(text: 'Popcorn'),
-                      Tab(text: 'Drinks'),
-                      Tab(text: 'Snacks'),
+          // Konten Halaman (Scrollable)
+          SingleChildScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 10),
+
+                // 1. PROMO CAROUSEL (Widget Terpisah)
+                const FoodPromoCarousel(),
+
+                const SizedBox(height: 24),
+
+                // 2. HOT ITEMS (Widget Terpisah)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: const [
+                      Icon(
+                        Icons.local_fire_department,
+                        color: Colors.orangeAccent,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Lagi Hot Nih!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              ];
-            },
-            body: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildFoodList('all'),
-                _buildFoodList('combo'),
-                _buildFoodList('popcorn'),
-                _buildFoodList('drink'),
-                _buildFoodList('snack'),
+                const SizedBox(height: 16),
+                HotItemsCarousel(foods: _allFoods, onAdd: _incrementItem),
+
+                const SizedBox(height: 24),
+
+                // 3. KATEGORI SIMETRIS (Widget Terpisah)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: const Text(
+                    'Jelajahi Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FoodCategoryButtons(
+                  selectedCategory: _selectedCategory,
+                  onCategorySelected: (category) {
+                    setState(() {
+                      _selectedCategory = category;
+                    });
+                  },
+                ),
+
+                const SizedBox(height: 24),
+
+                // 4. LIST MENU VERTIKAL (Filtered)
+                _buildFoodList(),
+
+                const SizedBox(height: 100), // Padding Bawah untuk Cart
               ],
             ),
           ),
 
-          // Floating Cart
+          // Floating Cart (Keranjang Melayang)
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.elasticOut,
-            bottom: hasItems ? 30 : -100,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            bottom: hasItems ? 30 : -100, // Sembunyi jika kosong
             left: 20,
             right: 20,
             child: _buildFloatingCart(),
@@ -239,20 +275,30 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     );
   }
 
-  Widget _buildFoodList(String category) {
-    final foods = category == 'all'
+  // --- LIST BUILDER (Filtered by Button Category) ---
+  Widget _buildFoodList() {
+    final foods = _selectedCategory == 'all'
         ? _allFoods
-        : _allFoods.where((f) => f.category == category).toList();
+        : _allFoods.where((f) => f.category == _selectedCategory).toList();
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        20,
-        20,
-        120,
-      ), // Padding bawah besar untuk cart
-      physics: const BouncingScrollPhysics(),
+    if (foods.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(
+          child: Text(
+            "Menu kosong untuk kategori ini",
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
+    }
+
+    return ListView.separated(
+      shrinkWrap: true, // Agar bisa di dalam SingleChildScrollView
+      physics: const NeverScrollableScrollPhysics(), // Scroll ikut parent
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       itemCount: foods.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final food = foods[index];
         return _buildFoodListItem(food);
@@ -260,222 +306,162 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     );
   }
 
-  // --- KARTU MAKANAN YANG ELEGAN ---
+  // --- KARTU MENU VERTIKAL (Custom Widget di dalam file ini) ---
   Widget _buildFoodListItem(FoodModel food) {
     final qty = _cart[food.id] ?? 0;
     final bool isSelected = qty > 0;
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(12),
+      duration: const Duration(milliseconds: 200),
+      height: 110,
       decoration: BoxDecoration(
         color: isSelected
             ? AppColors.gold.withOpacity(0.05)
             : AppColors.darkGrey,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         border: isSelected
             ? Border.all(color: AppColors.gold.withOpacity(0.3), width: 1)
             : Border.all(color: Colors.transparent),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. GAMBAR (Kiri)
-          Stack(
-            children: [
-              Hero(
-                tag: 'food_${food.id}',
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: CachedNetworkImage(
-                    imageUrl: food.imageUrl,
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) =>
-                        Container(color: Colors.grey[900]),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[900],
-                      child: const Icon(
-                        Icons.fastfood,
-                        color: AppColors.textGrey,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              // Rating Badge (Kecil di pojok gambar)
-              if (food.rating >= 4.5)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Colors.black87,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.star, color: AppColors.gold, size: 10),
-                        const SizedBox(width: 2),
-                        Text(
-                          food.rating.toString(),
-                          style: const TextStyle(
-                            color: AppColors.gold,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
+          // Gambar
+          ClipRRect(
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(16),
+            ),
+            child: CachedNetworkImage(
+              imageUrl: food.imageUrl,
+              width: 110,
+              height: 110,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(color: Colors.grey[900]),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.fastfood, color: Colors.grey),
+            ),
           ),
 
-          const SizedBox(width: 16),
-
-          // 2. INFO & KONTROL (Kanan)
+          // Info
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Nama & Kategori
-                Text(
-                  food.category.toUpperCase(),
-                  style: TextStyle(
-                    color: AppColors.textGrey.withOpacity(0.7),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 1.0,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  food.name,
-                  style: const TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 6),
-
-                // Deskripsi
-                Text(
-                  food.description,
-                  style: const TextStyle(
-                    color: AppColors.textGrey,
-                    fontSize: 11,
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                const SizedBox(height: 16),
-
-                // Harga & Tombol Add
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _formatCurrency(food.price),
-                      style: const TextStyle(
-                        color: AppColors.gold,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        food.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
-
-                    // KONTROL JUMLAH (ADD / COUNTER)
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: qty > 0 ? AppColors.gold : Colors.transparent,
-                        border: Border.all(color: AppColors.gold),
-                        borderRadius: BorderRadius.circular(30),
+                      const SizedBox(height: 4),
+                      Text(
+                        food.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textGrey,
+                          fontSize: 11,
+                        ),
                       ),
-                      child: qty == 0
-                          ? InkWell(
-                              onTap: () => _incrementItem(food),
-                              borderRadius: BorderRadius.circular(30),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
+                    ],
+                  ),
+
+                  // Harga & Kontrol
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatCurrency(food.price),
+                        style: const TextStyle(
+                          color: AppColors.gold,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+
+                      // Tombol ADD / Counter
+                      if (qty == 0)
+                        GestureDetector(
+                          onTap: () => _incrementItem(food),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppColors.gold),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'ADD',
+                              style: TextStyle(
+                                color: AppColors.gold,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: AppColors.gold,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 30),
+                                icon: const Icon(
+                                  Icons.remove,
+                                  size: 16,
+                                  color: Colors.black,
                                 ),
-                                child: Center(
-                                  child: Text(
-                                    'ADD',
-                                    style: TextStyle(
-                                      color: AppColors.gold,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                onPressed: () => _decrementItem(food),
+                              ),
+                              Text(
+                                '$qty',
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            )
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 36,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.remove,
-                                    size: 16,
-                                    color: Colors.black,
-                                  ),
-                                  onPressed: () => _decrementItem(food),
+                              IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(minWidth: 30),
+                                icon: const Icon(
+                                  Icons.add,
+                                  size: 16,
+                                  color: Colors.black,
                                 ),
-                                Text(
-                                  '$qty',
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                IconButton(
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 36,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.add,
-                                    size: 16,
-                                    color: Colors.black,
-                                  ),
-                                  onPressed: () => _incrementItem(food),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ],
-                ),
-              ],
+                                onPressed: () => _incrementItem(food),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -483,10 +469,11 @@ class _FoodOrderPageState extends State<FoodOrderPage>
     );
   }
 
-  // --- FLOATING CART BAR (GLASSPHORMISM STYLE) ---
+  // --- FLOATING CART BAR ---
   Widget _buildFloatingCart() {
     return GestureDetector(
       onTap: () {
+        // TODO: Navigate to Checkout
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Fitur Checkout akan segera hadir!')),
         );
@@ -494,9 +481,8 @@ class _FoodOrderPageState extends State<FoodOrderPage>
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          // Gradient Emas Mewah
           gradient: const LinearGradient(
-            colors: [Color(0xFFD4AF37), Color(0xFFFFD700)],
+            colors: [AppColors.gold, Color(0xFFF4D03F)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -511,57 +497,28 @@ class _FoodOrderPageState extends State<FoodOrderPage>
         ),
         child: Row(
           children: [
-            // Icon Cart dengan Badge
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.shopping_bag,
-                    color: Colors.black,
-                    size: 24,
-                  ),
-                ),
-                Positioned(
-                  right: -2,
-                  top: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${_getTotalItems()}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.shopping_bag,
+                color: Colors.black,
+                size: 24,
+              ),
             ),
-
             const SizedBox(width: 16),
-
-            // Info Harga
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'Total Pembayaran',
-                    style: TextStyle(
+                  Text(
+                    '${_getTotalItems()} Items',
+                    style: const TextStyle(
                       color: Colors.black87,
-                      fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -571,39 +528,12 @@ class _FoodOrderPageState extends State<FoodOrderPage>
                       color: Colors.black,
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Tombol Checkout
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Row(
-                children: [
-                  Text(
-                    'Checkout',
-                    style: TextStyle(
-                      color: AppColors.gold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                  SizedBox(width: 4),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: AppColors.gold,
-                    size: 16,
-                  ),
-                ],
-              ),
-            ),
+            const Icon(Icons.arrow_forward_rounded, color: Colors.black),
           ],
         ),
       ),
