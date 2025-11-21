@@ -300,6 +300,14 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               IconButton(
+                icon: const Icon(Icons.receipt_long_outlined, color: AppColors.textWhite),
+                tooltip: 'Pesanan Saya',
+                onPressed: () {
+                  // Navigasi ke halaman pesanan
+                  context.go('/my-orders'); 
+                },
+              ),
+              IconButton(
                 icon: const Icon(Icons.person_outline, color: AppColors.gold),
                 tooltip: 'Profile',
                 onPressed: () {
