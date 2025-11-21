@@ -6,9 +6,11 @@ import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/food_order/data/models/food_model.dart';
 
 // --- Import Widget Terpisah ---
+// Pastikan path-nya sesuai dengan struktur folder Anda!
 import 'package:cinema_noir/features/food_order/presentation/widgets/food_promo_carousel.dart';
 import 'package:cinema_noir/features/food_order/presentation/widgets/hot_items_carousel.dart';
 import 'package:cinema_noir/features/food_order/presentation/widgets/food_category_buttons.dart';
+import 'package:cinema_noir/features/food_order/presentation/widgets/food_detail_bottom_sheet.dart';
 
 class FoodOrderPage extends StatefulWidget {
   const FoodOrderPage({super.key});
@@ -21,14 +23,13 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
+  // State
   String _selectedCategory = 'all';
   final Map<String, int> _cart = {};
-
-  // State untuk mode pencarian
   bool _isSearching = false;
   String _searchQuery = '';
 
-  // Data Dummy Menu (Lengkap)
+  // Data Dummy Menu
   final List<FoodModel> _allFoods = [
     const FoodModel(
       id: '1',
@@ -102,13 +103,12 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     ),
   ];
 
-  // List untuk menampung hasil pencarian
   List<FoodModel> _filteredFoods = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredFoods = _allFoods; // Awalnya tampilkan semua
+    _filteredFoods = _allFoods;
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -123,9 +123,7 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     setState(() {
       _searchQuery = _searchController.text;
       _isSearching = _searchQuery.isNotEmpty;
-
       if (_isSearching) {
-        // Filter berdasarkan query pencarian
         _filteredFoods = _allFoods
             .where(
               (food) =>
@@ -133,7 +131,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
             )
             .toList();
       } else {
-        // Jika kosong, kembalikan ke semua (tapi UI akan berubah ke mode normal)
         _filteredFoods = _allFoods;
       }
     });
@@ -147,11 +144,9 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     ).format(amount);
   }
 
-  // --- LOGIC KERANJANG ---
+  // --- Logic Keranjang ---
   void _incrementItem(FoodModel food) {
-    setState(() {
-      _cart[food.id] = (_cart[food.id] ?? 0) + 1;
-    });
+    setState(() => _cart[food.id] = (_cart[food.id] ?? 0) + 1);
   }
 
   void _decrementItem(FoodModel food) {
@@ -181,12 +176,43 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     return total;
   }
 
+  // --- FUNGSI UNTUK MENAMPILKAN DETAIL (Bottom Sheet) ---
+  void _showFoodDetail(BuildContext context, FoodModel food) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true, // Agar bisa full height/custom height
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        // Bungkus dengan StatefulBuilder agar BottomSheet bisa update state-nya sendiri
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return FoodDetailBottomSheet(
+              food: food,
+              currentQty: _cart[food.id] ?? 0,
+              onIncrement: () {
+                // Update state di Halaman Utama
+                _incrementItem(food);
+                // Update state di Modal (agar angka berubah real-time)
+                setModalState(() {});
+              },
+              onDecrement: () {
+                _decrementItem(food);
+                setModalState(() {});
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasItems = _cart.isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
+      // AppBar Sederhana
       appBar: AppBar(
         backgroundColor: AppColors.darkBackground,
         elevation: 0,
@@ -218,9 +244,11 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. SEARCH BAR (Selalu Muncul di Atas)
+                const SizedBox(height: 10),
+
+                // 1. SEARCH BAR
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Container(
                     decoration: BoxDecoration(
                       color: AppColors.darkGrey,
@@ -229,19 +257,12 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                         color: _isSearching ? AppColors.gold : Colors.white10,
                         width: 1,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
                     ),
                     child: TextField(
                       controller: _searchController,
                       style: const TextStyle(color: Colors.white),
                       decoration: InputDecoration(
-                        hintText: 'Cari popcorn, minuman...',
+                        hintText: 'Cari makanan favoritmu...',
                         hintStyle: TextStyle(
                           color: AppColors.textGrey.withOpacity(0.5),
                         ),
@@ -257,10 +278,7 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                                   Icons.close,
                                   color: Colors.white,
                                 ),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  // FocusScope.of(context).unfocus(); // Opsional: tutup keyboard
-                                },
+                                onPressed: () => _searchController.clear(),
                               )
                             : null,
                         border: InputBorder.none,
@@ -272,44 +290,31 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
 
-                // 2. DYNAMIC CONTENT
-                // Jika sedang mencari (_isSearching == true), TAMPILKAN HASIL PENCARIAN
-                // Jika tidak, TAMPILKAN CAROUSEL & KATEGORI (Normal Mode)
+                // 2. KONTEN DINAMIS (Search vs Normal)
                 if (_isSearching) ...[
-                  // --- MODE PENCARIAN ---
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.manage_search, color: AppColors.gold),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Hasil Pencarian: "$_searchQuery"',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Hasil Pencarian: "$_searchQuery"',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Tampilkan List Hasil Filter
                   _buildFoodList(isSearchResult: true),
                 ] else ...[
                   // --- MODE NORMAL ---
 
-                  // Promo Carousel
+                  // A. Promo Carousel
                   const FoodPromoCarousel(),
-
                   const SizedBox(height: 24),
 
-                  // Hot Items
+                  // B. Hot Items Carousel
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -332,10 +337,9 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                   ),
                   const SizedBox(height: 16),
                   HotItemsCarousel(foods: _allFoods, onAdd: _incrementItem),
-
                   const SizedBox(height: 24),
 
-                  // Kategori
+                  // C. Kategori (Tombol Simetris)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: const Text(
@@ -350,25 +354,20 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                   const SizedBox(height: 16),
                   FoodCategoryButtons(
                     selectedCategory: _selectedCategory,
-                    onCategorySelected: (category) {
-                      setState(() {
-                        _selectedCategory = category;
-                      });
-                    },
+                    onCategorySelected: (category) =>
+                        setState(() => _selectedCategory = category),
                   ),
-
                   const SizedBox(height: 24),
 
-                  // List Menu Normal
+                  // D. List Menu (Filtered by Category)
                   _buildFoodList(isSearchResult: false),
                 ],
-
-                const SizedBox(height: 100), // Padding Bawah untuk Cart
+                const SizedBox(height: 100), // Padding bawah untuk cart
               ],
             ),
           ),
 
-          // Floating Cart
+          // 3. FLOATING CART
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
@@ -382,16 +381,12 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     );
   }
 
-  // --- LIST BUILDER ---
+  // --- BUILDER LIST MENU ---
   Widget _buildFoodList({required bool isSearchResult}) {
-    // Logic pemilihan data sumber
     List<FoodModel> foodsToShow;
-
     if (isSearchResult) {
-      // Jika mode pencarian, pakai data yang sudah difilter text
       foodsToShow = _filteredFoods;
     } else {
-      // Jika mode normal, filter berdasarkan kategori tombol
       foodsToShow = _selectedCategory == 'all'
           ? _allFoods
           : _allFoods.where((f) => f.category == _selectedCategory).toList();
@@ -401,22 +396,12 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
       return Padding(
         padding: const EdgeInsets.all(32.0),
         child: Center(
-          child: Column(
-            children: [
-              Icon(
-                Icons.search_off,
-                size: 64,
-                color: AppColors.textGrey.withOpacity(0.5),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isSearchResult ? "Menu tidak ditemukan" : "Kategori ini kosong",
-                style: TextStyle(
-                  color: AppColors.textGrey.withOpacity(0.5),
-                  fontSize: 16,
-                ),
-              ),
-            ],
+          child: Text(
+            isSearchResult ? "Menu tidak ditemukan" : "Kategori ini kosong",
+            style: TextStyle(
+              color: AppColors.textGrey.withOpacity(0.5),
+              fontSize: 16,
+            ),
           ),
         ),
       );
@@ -428,182 +413,180 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       itemCount: foodsToShow.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final food = foodsToShow[index];
-        return _buildFoodListItem(food);
-      },
+      itemBuilder: (context, index) => _buildFoodListItem(foodsToShow[index]),
     );
   }
 
-  // --- KARTU MENU VERTIKAL ---
+  // --- WIDGET KARTU LIST MENU ---
   Widget _buildFoodListItem(FoodModel food) {
     final qty = _cart[food.id] ?? 0;
     final bool isSelected = qty > 0;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      height: 110,
-      decoration: BoxDecoration(
-        color: isSelected
-            ? AppColors.gold.withOpacity(0.05)
-            : AppColors.darkGrey,
-        borderRadius: BorderRadius.circular(16),
-        border: isSelected
-            ? Border.all(color: AppColors.gold.withOpacity(0.3), width: 1)
-            : Border.all(color: Colors.transparent),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Gambar
-          ClipRRect(
-            borderRadius: const BorderRadius.horizontal(
-              left: Radius.circular(16),
+    return GestureDetector(
+      onTap: () => _showFoodDetail(context, food), // KLIK UNTUK BUKA DETAIL
+      child: Container(
+        height: 110,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.gold.withOpacity(0.05)
+              : AppColors.darkGrey,
+          borderRadius: BorderRadius.circular(16),
+          border: isSelected
+              ? Border.all(color: AppColors.gold.withOpacity(0.3), width: 1)
+              : Border.all(color: Colors.transparent),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
             ),
-            child: CachedNetworkImage(
-              imageUrl: food.imageUrl,
-              width: 110,
-              height: 110,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(color: Colors.grey[900]),
-              errorWidget: (context, url, error) =>
-                  const Icon(Icons.fastfood, color: Colors.grey),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Gambar
+            ClipRRect(
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(16),
+              ),
+              child: CachedNetworkImage(
+                imageUrl: food.imageUrl,
+                width: 110,
+                height: 110,
+                fit: BoxFit.cover,
+                placeholder: (context, url) =>
+                    Container(color: Colors.grey[900]),
+              ),
             ),
-          ),
-
-          // Info
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        food.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        food.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textGrey,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Harga & Kontrol
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatCurrency(food.price),
-                        style: const TextStyle(
-                          color: AppColors.gold,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      if (qty == 0)
-                        GestureDetector(
-                          onTap: () => _incrementItem(food),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.gold),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'ADD',
-                              style: TextStyle(
-                                color: AppColors.gold,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+            // Info
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          food.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
                           ),
-                        )
-                      else
-                        Container(
-                          height: 30,
-                          decoration: BoxDecoration(
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          food.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textGrey,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _formatCurrency(food.price),
+                          style: const TextStyle(
                             color: AppColors.gold,
-                            borderRadius: BorderRadius.circular(20),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 30),
-                                icon: const Icon(
-                                  Icons.remove,
-                                  size: 16,
-                                  color: Colors.black,
-                                ),
-                                onPressed: () => _decrementItem(food),
+                        ),
+
+                        // Tombol Add/Counter (Opsional: Bisa dihapus jika ingin interaksi hanya lewat detail modal)
+                        if (qty == 0)
+                          GestureDetector(
+                            onTap: () => _incrementItem(food),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
                               ),
-                              Text(
-                                '$qty',
-                                style: const TextStyle(
-                                  color: Colors.black,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.gold),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Text(
+                                'ADD',
+                                style: TextStyle(
+                                  color: AppColors.gold,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              IconButton(
-                                padding: EdgeInsets.zero,
-                                constraints: const BoxConstraints(minWidth: 30),
-                                icon: const Icon(
-                                  Icons.add,
-                                  size: 16,
-                                  color: Colors.black,
+                            ),
+                          )
+                        else
+                          Container(
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: AppColors.gold,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 30,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.remove,
+                                    size: 16,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () => _decrementItem(food),
                                 ),
-                                onPressed: () => _incrementItem(food),
-                              ),
-                            ],
+                                Text(
+                                  '$qty',
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                IconButton(
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 30,
+                                  ),
+                                  icon: const Icon(
+                                    Icons.add,
+                                    size: 16,
+                                    color: Colors.black,
+                                  ),
+                                  onPressed: () => _incrementItem(food),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  // --- FLOATING CART BAR ---
+  // --- WIDGET FLOATING CART ---
   Widget _buildFloatingCart() {
     return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fitur Checkout akan segera hadir!')),
-        );
-      },
+      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Fitur Checkout akan segera hadir!')),
+      ),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(

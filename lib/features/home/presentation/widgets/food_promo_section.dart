@@ -8,7 +8,7 @@ import 'package:cinema_noir/core/constants/app_colors.dart';
 // CARA MENGGUNAKAN:
 // 1. Import widget ini di home_page.dart
 // 2. Tambahkan setelah section "Akan Tayang":
-//    
+//
 //    const SizedBox(height: 24.0),
 //    const FoodPromoSection(),
 //    const SizedBox(height: 24.0),
@@ -45,10 +45,7 @@ class FoodPromoSection extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       'Promo menarik untuk kamu',
-                      style: TextStyle(
-                        color: AppColors.textGrey,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: AppColors.textGrey, fontSize: 14),
                     ),
                   ],
                 ),
@@ -60,10 +57,7 @@ class FoodPromoSection extends StatelessWidget {
                 },
                 child: const Text(
                   'Lihat semua >',
-                  style: TextStyle(
-                    color: AppColors.textGrey,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: AppColors.textGrey, fontSize: 14),
                 ),
               ),
             ],
@@ -73,7 +67,7 @@ class FoodPromoSection extends StatelessWidget {
 
         // Carousel Promo
         _buildPromoCarousel(context, isMobile: isMobile),
-        
+
         const SizedBox(height: 16.0),
 
         // CTA Button
@@ -86,24 +80,15 @@ class FoodPromoSection extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.darkGrey,
               foregroundColor: AppColors.textWhite,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 32,
-                vertical: 14,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
-                side: const BorderSide(
-                  color: AppColors.gold,
-                  width: 1.5,
-                ),
+                side: const BorderSide(color: AppColors.gold, width: 1.5),
               ),
             ),
             child: const Text(
               'Pesen m.food',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
         ),
@@ -117,21 +102,24 @@ class FoodPromoSection extends StatelessWidget {
       FoodPromo(
         title: 'GLINDA Light-Up Popcorn Bucket',
         subtitle: 'Wicked The Movie',
-        imageUrl: 'https://via.placeholder.com/400x250/1B5E20/FFFFFF?text=Glinda+Popcorn+Bucket',
+        imageUrl:
+            'https://via.placeholder.com/400x250/1B5E20/FFFFFF?text=Glinda+Popcorn+Bucket',
         badge: '450k',
         releaseDate: 'In Cinemas 19 November 2025',
       ),
       FoodPromo(
         title: 'Cashback 25%',
         subtitle: 'Pakai Kartu XXI',
-        imageUrl: 'https://via.placeholder.com/400x250/0277BD/FFFFFF?text=Cashback+25%25',
+        imageUrl:
+            'https://via.placeholder.com/400x250/0277BD/FFFFFF?text=Cashback+25%25',
         badge: 'Max 50k',
         releaseDate: null,
       ),
       FoodPromo(
         title: 'Jajan Hemat Reward Nikmat',
         subtitle: 'XXI Rewards',
-        imageUrl: 'https://via.placeholder.com/400x250/6A1B9A/FFFFFF?text=XXI+Rewards',
+        imageUrl:
+            'https://via.placeholder.com/400x250/6A1B9A/FFFFFF?text=XXI+Rewards',
         badge: 'Cashback',
         releaseDate: null,
       ),
@@ -204,8 +192,7 @@ class _FoodPromoCardState extends State<_FoodPromoCard> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          transform: Matrix4.identity()
-            ..scale(_isHovered ? 1.02 : 1.0),
+          transform: Matrix4.identity()..scale(_isHovered ? 1.02 : 1.0),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: Stack(
@@ -218,9 +205,7 @@ class _FoodPromoCardState extends State<_FoodPromoCard> {
                     placeholder: (context, url) => Container(
                       color: AppColors.darkGrey,
                       child: const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.gold,
-                        ),
+                        child: CircularProgressIndicator(color: AppColors.gold),
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
