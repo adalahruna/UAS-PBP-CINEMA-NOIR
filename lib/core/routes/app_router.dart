@@ -14,9 +14,10 @@ import 'package:cinema_noir/features/cinemas/presentation/pages/cinemas_page.dar
 import 'package:cinema_noir/features/home/presentation/pages/my_orders_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/profile_page.dart';
 
-// --- Import Halaman Food Order (PENTING UNTUK m.food) ---
+// --- Import Fitur m.food ---
 import 'package:cinema_noir/features/food_order/presentation/pages/food_order_page.dart';
-// ---------------------------------------------------------
+import 'package:cinema_noir/features/food_order/presentation/pages/food_checkout_page.dart';
+// ---------------------------
 
 import 'auth_stream_listener.dart';
 
@@ -62,8 +63,6 @@ class AppRouter {
         path: '/',
         builder: (context, state) => const HomePage(),
         routes: [
-          // Child routes (sub-halaman dari Home)
-
           // 1. MOVIES (Lihat semua film)
           GoRoute(
             path: 'movies',
@@ -114,7 +113,7 @@ class AppRouter {
             builder: (context, state) => const ProfilePage(),
           ),
 
-          // 6. FOOD ORDER (BARU - Fitur m.food)
+          // 6. FOOD ORDER (Fitur m.food)
           GoRoute(
             path: 'food',
             pageBuilder: (context, state) {
@@ -134,6 +133,18 @@ class AppRouter {
                     },
               );
             },
+            routes: [
+              // Sub-route: Checkout Makanan
+              // Path lengkap: /food/food-checkout
+              GoRoute(
+                path: 'food-checkout',
+                builder: (context, state) {
+                  // Menerima List Cart Items via 'extra'
+                  final cartItems = state.extra as List<Map<String, dynamic>>;
+                  return FoodCheckoutPage(cartItems: cartItems);
+                },
+              ),
+            ],
           ),
         ],
       ),

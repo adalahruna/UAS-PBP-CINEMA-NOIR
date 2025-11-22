@@ -584,9 +584,30 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
   // --- WIDGET FLOATING CART ---
   Widget _buildFloatingCart() {
     return GestureDetector(
-      onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fitur Checkout akan segera hadir!')),
-      ),
+      // FUNGSI KLIK DIPERBAIKI DI SINI
+      onTap: () {
+        // 1. Siapkan data untuk dikirim ke checkout
+        final List<Map<String, dynamic>> checkoutItems = [];
+
+        _cart.forEach((id, qty) {
+          // Cari detail makanan berdasarkan ID
+          final food = _allFoods.firstWhere((element) => element.id == id);
+
+          checkoutItems.add({
+            'id': food.id,
+            'name': food.name,
+            'price': food.price,
+            'qty': qty,
+            'image': food
+                .imageUrl, // Pastikan key ini sesuai dengan yang diharapkan checkout page
+          });
+        });
+
+        // 2. Navigasi ke halaman checkout
+        if (checkoutItems.isNotEmpty) {
+          context.push('/food/food-checkout', extra: checkoutItems);
+        }
+      },
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
