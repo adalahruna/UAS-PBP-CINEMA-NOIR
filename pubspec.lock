@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.3.0"
+  app_color:
+    dependency: "direct main"
+    description:
+      name: app_color
+      sha256: c8315bad7161d030564277c8551d0c113e73afeca653f90b5c7d2f34d873cf8b
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.2"
   app_links:
     dependency: transitive
     description:

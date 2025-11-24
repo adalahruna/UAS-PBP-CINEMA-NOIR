@@ -394,11 +394,11 @@ class _HomePageState extends State<HomePage> {
           onTap: () => context.go('/cinemas'),
         ),
         const SizedBox(width: 12.0),
-        const _CategoryIcon(
-          icon: Icons.people_outline,
-          label: 'Community',
-          onTap: null,
-        ),
+        _CategoryIcon(
+            icon: Icons.people_outline,
+            label: 'Community',
+            onTap: () => context.go('/community'),
+          ),
         const SizedBox(width: 12.0),
         _CategoryIcon(
           icon: Icons.movie_creation_outlined,
@@ -413,10 +413,10 @@ class _HomePageState extends State<HomePage> {
         ),
         const SizedBox(width: 12.0),
         const _CategoryIcon(
-          icon: Icons.event_seat_outlined,
-          label: 'Private Booking',
-          onTap: null,
-        ),
+            icon: Icons.event_seat_outlined,
+            label: 'Private Booking',
+            onTap: null,
+          ),
       ],
     );
   }
@@ -1334,3 +1334,6 @@ class _CategoryButtonState extends State<_CategoryButton> {
     );
   }
 }
+
+
+

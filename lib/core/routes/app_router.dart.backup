@@ -1,4 +1,4 @@
-﻿import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -17,10 +17,6 @@ import 'package:cinema_noir/features/home/presentation/pages/profile_page.dart';
 // --- Import Fitur m.food ---
 import 'package:cinema_noir/features/food_order/presentation/pages/food_order_page.dart';
 import 'package:cinema_noir/features/food_order/presentation/pages/food_checkout_page.dart';
-
-// --- Import Fitur Community ---
-import 'package:cinema_noir/features/community/presentation/pages/community_page.dart';
-import 'package:cinema_noir/features/community/presentation/pages/movie_detail_page.dart';
 // ---------------------------
 
 import 'auth_stream_listener.dart';
@@ -110,54 +106,9 @@ class AppRouter {
             },
           ),
 
-          // 3. COMMUNITY - FITUR BARU
-          GoRoute(
-            path: 'community',
-            pageBuilder: (context, state) {
-              return CustomTransitionPage(
-                key: state.pageKey,
-                child: const CommunityPage(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(1.0, 0.0),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  );
-                },
-              );
-            },
-            routes: [
-              GoRoute(
-                path: 'movie/:id',
-                pageBuilder: (context, state) {
-                  final extra = state.extra;
-                  return CustomTransitionPage(
-                    key: state.pageKey,
-                    child: MovieDetailPage(
-                      movie: extra is MovieModel ? extra : MovieModel(
-                        id: int.parse(state.pathParameters['id']!),
-                        title: 'Movie',
-                        overview: '',
-                        voteAverage: 0.0,
-                      ),
-                    ),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(1.0, 0.0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-
+          // 3. MOVIE TICKET (OLD) - Hapus atau biarkan jika masih dipakai via path lama
+          // Sebaiknya dihapus agar konsisten dengan struktur baru '/movies/:id/ticket'
+          
           // 4. MY ORDERS
           GoRoute(
             path: 'my-orders',

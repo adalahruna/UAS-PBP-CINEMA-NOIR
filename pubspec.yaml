@@ -49,6 +49,7 @@ dependencies:
   url_launcher: ^6.3.1
   supabase_flutter: ^2.8.4
   image_picker: ^1.1.2
+  app_color: ^1.1.2
   # youtube_player_flutter: ^9.0.4
   # youtube_player_iframe: ^5.2.2
 
