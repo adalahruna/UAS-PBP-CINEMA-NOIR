@@ -21,6 +21,7 @@ class ReviewLocalDataSource {
     if (user == null) throw Exception('User not authenticated');
 
     final now = DateTime.now();
+    // ID unik gabungan userId dan movieId
     final reviewId = '${user.uid}_$movieId';
 
     final userReview = UserReviewModel(
@@ -42,7 +43,8 @@ class ReviewLocalDataSource {
         .set(userReview.toJson());
   }
 
-  /// Get user's review for a specific movie
+  /// Get user's review for a specific movie (Restored!)
+  /// Digunakan untuk mengecek apakah user sudah pernah review film ini
   Future<UserReviewModel?> getUserReviewForMovie(int movieId) async {
     final user = _auth.currentUser;
     if (user == null) return null;
@@ -59,31 +61,31 @@ class ReviewLocalDataSource {
     return null;
   }
 
-  /// Get all reviews for a specific movie (simplified query)
+  /// Get all reviews for a specific movie (Public Reviews)
   Future<List<UserReviewModel>> getReviewsForMovie(int movieId) async {
     try {
-      // Use simple query without orderBy to avoid index requirement
       final snapshot = await _firestore
           .collection(_reviewsCollection)
           .where('movieId', isEqualTo: movieId)
-          .limit(10) // Limit results to avoid too much data
+          .orderBy('createdAt', descending: true) // Menggunakan Index
+          .limit(20)
           .get();
+
+      print('DEBUG: Ditemukan ${snapshot.docs.length} review di Firestore.');
 
       final reviews = snapshot.docs
           .map((doc) => UserReviewModel.fromJson(doc.data()))
           .toList();
-
-      // Sort locally instead of using Firestore orderBy
-      reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       
       return reviews;
     } catch (e) {
       print('Error getting reviews for movie: $e');
-      return []; // Return empty list on error
+      return [];
     }
   }
 
-  /// Get user's all reviews (simplified)
+  /// Get user's all reviews (For Profile Page)
+  /// Hanya SATU deklarasi sekarang
   Future<List<UserReviewModel>> getUserReviews() async {
     final user = _auth.currentUser;
     if (user == null) return [];
@@ -92,14 +94,14 @@ class ReviewLocalDataSource {
       final snapshot = await _firestore
           .collection(_reviewsCollection)
           .where('userId', isEqualTo: user.uid)
-          .limit(20) // Limit results
+          .limit(50)
           .get();
 
       final reviews = snapshot.docs
           .map((doc) => UserReviewModel.fromJson(doc.data()))
           .toList();
 
-      // Sort locally
+      // Sort client-side (aman untuk query user pribadi)
       reviews.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       
       return reviews;
@@ -121,7 +123,7 @@ class ReviewLocalDataSource {
         .delete();
   }
 
-  /// Get average rating for a movie from user reviews (simplified)
+  /// Get average rating for a movie
   Future<Map<String, dynamic>> getMovieRatingStats(int movieId) async {
     try {
       final snapshot = await _firestore
@@ -141,12 +143,14 @@ class ReviewLocalDataSource {
 
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        totalRating += (data['rating'] as num).toDouble();
-        reviewCount++;
+        if (data['rating'] is num) {
+           totalRating += (data['rating'] as num).toDouble();
+           reviewCount++;
+        }
       }
 
       return {
-        'averageRating': totalRating / reviewCount,
+        'averageRating': reviewCount > 0 ? totalRating / reviewCount : 0.0,
         'totalReviews': reviewCount,
       };
     } catch (e) {
@@ -158,13 +162,12 @@ class ReviewLocalDataSource {
     }
   }
 
-  /// Get trending movies based on user activity (simplified)
+  /// Get trending movies
   Future<List<Map<String, dynamic>>> getTrendingMovies() async {
     try {
-      // Get recent reviews without complex date filtering
       final snapshot = await _firestore
           .collection(_reviewsCollection)
-          .limit(100) // Get last 100 reviews
+          .limit(100)
           .get();
 
       Map<int, Map<String, dynamic>> movieStats = {};
@@ -176,7 +179,6 @@ class ReviewLocalDataSource {
         final rating = (data['rating'] as num).toDouble();
         final createdAt = (data['createdAt'] as Timestamp).toDate();
 
-        // Only include reviews from last 30 days
         if (DateTime.now().difference(createdAt).inDays <= 30) {
           if (movieStats.containsKey(movieId)) {
             movieStats[movieId]!['totalRating'] += rating;
@@ -192,7 +194,6 @@ class ReviewLocalDataSource {
         }
       }
 
-      // Calculate average and sort by popularity
       List<Map<String, dynamic>> trendingMovies = movieStats.values.map((movie) {
         movie['averageRating'] = movie['totalRating'] / movie['reviewCount'];
         return movie;

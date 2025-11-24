@@ -1,5 +1,6 @@
 // lib/features/community/data/repositories/community_repository.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/community/data/models/movie_detail_model.dart';
 import 'package:cinema_noir/features/community/data/models/user_review_model.dart';
@@ -25,24 +26,33 @@ class CommunityRepository {
   }
 
   /// Get movie details with additional info
+  /// INI BAGIAN YANG DIUBAH AGAR REVIEW USER LAIN DI ATAS
   Future<MovieDetailModel> getMovieDetails(int movieId) async {
-    // Get movie details from TMDB
+    // 1. Ambil data dari TMDB dan Firestore
     final movieDetail = await _remoteDataSource.getMovieDetails(movieId);
-    
-    // Get user reviews from Firestore and combine with TMDB reviews
     final userReviews = await _reviewDataSource.getReviewsForMovie(movieId);
     
-    // Convert user reviews to ReviewModel format for consistency
+    // 2. Ambil ID user yang sedang login
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+    // 3. Filter & Convert Review Firestore
+    // Kita exclude (buang) review milik diri sendiri agar tidak muncul double 
+    // (karena di UI sudah ada bagian khusus "Your Review")
+    final firestoreReviews = userReviews
+        .where((r) => r.userId != currentUserId) 
+        .map((userReview) => ReviewModel(
+          id: userReview.id,
+          author: userReview.userName,
+          content: userReview.review,
+          createdAt: userReview.createdAt.toIso8601String(),
+          rating: userReview.rating,
+          avatarPath: null,
+        )).toList();
+
+    // 4. GABUNGKAN: Review User Lain DULUAN, baru Review TMDB
     final List<ReviewModel> allReviews = [
-      ...movieDetail.reviews, // TMDB reviews
-      ...userReviews.map((userReview) => ReviewModel(
-        id: userReview.id,
-        author: userReview.userName,
-        content: userReview.review,
-        createdAt: userReview.createdAt.toIso8601String(),
-        rating: userReview.rating,
-        avatarPath: null,
-      )),
+      ...firestoreReviews, // <--- User lain di paling atas
+      ...movieDetail.reviews, // <--- Review TMDB di bawahnya
     ];
 
     return movieDetail.copyWith(reviews: allReviews);
