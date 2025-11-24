@@ -6,7 +6,6 @@ import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/food_order/data/models/food_model.dart';
 
 // --- Import Widget Terpisah ---
-// Pastikan path-nya sesuai dengan struktur folder Anda!
 import 'package:cinema_noir/features/food_order/presentation/widgets/food_promo_carousel.dart';
 import 'package:cinema_noir/features/food_order/presentation/widgets/hot_items_carousel.dart';
 import 'package:cinema_noir/features/food_order/presentation/widgets/food_category_buttons.dart';
@@ -183,16 +182,13 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
       isScrollControlled: true, // Agar bisa full height/custom height
       backgroundColor: Colors.transparent,
       builder: (context) {
-        // Bungkus dengan StatefulBuilder agar BottomSheet bisa update state-nya sendiri
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return FoodDetailBottomSheet(
               food: food,
               currentQty: _cart[food.id] ?? 0,
               onIncrement: () {
-                // Update state di Halaman Utama
                 _incrementItem(food);
-                // Update state di Modal (agar angka berubah real-time)
                 setModalState(() {});
               },
               onDecrement: () {
@@ -212,7 +208,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      // AppBar Sederhana
       appBar: AppBar(
         backgroundColor: AppColors.darkBackground,
         elevation: 0,
@@ -235,7 +230,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
         ),
         centerTitle: true,
       ),
-
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -245,7 +239,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
-
                 // 1. SEARCH BAR
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -291,8 +284,7 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // 2. KONTEN DINAMIS (Search vs Normal)
+                // 2. KONTEN DINAMIS
                 if (_isSearching) ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -308,13 +300,8 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                   const SizedBox(height: 16),
                   _buildFoodList(isSearchResult: true),
                 ] else ...[
-                  // --- MODE NORMAL ---
-
-                  // A. Promo Carousel
                   const FoodPromoCarousel(),
                   const SizedBox(height: 24),
-
-                  // B. Hot Items Carousel
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
@@ -338,8 +325,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                   const SizedBox(height: 16),
                   HotItemsCarousel(foods: _allFoods, onAdd: _incrementItem),
                   const SizedBox(height: 24),
-
-                  // C. Kategori (Tombol Simetris)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: const Text(
@@ -358,15 +343,12 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                         setState(() => _selectedCategory = category),
                   ),
                   const SizedBox(height: 24),
-
-                  // D. List Menu (Filtered by Category)
                   _buildFoodList(isSearchResult: false),
                 ],
-                const SizedBox(height: 100), // Padding bawah untuk cart
+                const SizedBox(height: 100),
               ],
             ),
           ),
-
           // 3. FLOATING CART
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
@@ -381,7 +363,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     );
   }
 
-  // --- BUILDER LIST MENU ---
   Widget _buildFoodList({required bool isSearchResult}) {
     List<FoodModel> foodsToShow;
     if (isSearchResult) {
@@ -417,13 +398,12 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     );
   }
 
-  // --- WIDGET KARTU LIST MENU ---
   Widget _buildFoodListItem(FoodModel food) {
     final qty = _cart[food.id] ?? 0;
     final bool isSelected = qty > 0;
 
     return GestureDetector(
-      onTap: () => _showFoodDetail(context, food), // KLIK UNTUK BUKA DETAIL
+      onTap: () => _showFoodDetail(context, food),
       child: Container(
         height: 110,
         decoration: BoxDecoration(
@@ -444,7 +424,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
         ),
         child: Row(
           children: [
-            // Gambar
             ClipRRect(
               borderRadius: const BorderRadius.horizontal(
                 left: Radius.circular(16),
@@ -458,7 +437,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                     Container(color: Colors.grey[900]),
               ),
             ),
-            // Info
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -502,8 +480,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                             fontSize: 15,
                           ),
                         ),
-
-                        // Tombol Add/Counter (Opsional: Bisa dihapus jika ingin interaksi hanya lewat detail modal)
                         if (qty == 0)
                           GestureDetector(
                             onTap: () => _incrementItem(food),
@@ -581,29 +557,20 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     );
   }
 
-  // --- WIDGET FLOATING CART ---
   Widget _buildFloatingCart() {
     return GestureDetector(
-      // FUNGSI KLIK DIPERBAIKI DI SINI
       onTap: () {
-        // 1. Siapkan data untuk dikirim ke checkout
         final List<Map<String, dynamic>> checkoutItems = [];
-
         _cart.forEach((id, qty) {
-          // Cari detail makanan berdasarkan ID
           final food = _allFoods.firstWhere((element) => element.id == id);
-
           checkoutItems.add({
             'id': food.id,
             'name': food.name,
             'price': food.price,
             'qty': qty,
-            'image': food
-                .imageUrl, // Pastikan key ini sesuai dengan yang diharapkan checkout page
+            'image': food.imageUrl,
           });
         });
-
-        // 2. Navigasi ke halaman checkout
         if (checkoutItems.isNotEmpty) {
           context.push('/food/food-checkout', extra: checkoutItems);
         }

@@ -23,13 +23,11 @@ import 'auth_stream_listener.dart';
 
 class AppRouter {
   static final AuthStreamListener _authListener = AuthStreamListener();
-
-  // Variable untuk melacak apakah splash screen sudah tampil
   static bool _splashShown = false;
 
   static final GoRouter router = GoRouter(
-    initialLocation: '/splash', // Mulai dari splash screen
-    refreshListenable: _authListener, // Dengarkan perubahan status login
+    initialLocation: '/splash',
+    refreshListenable: _authListener,
     routes: [
       // --- SPLASH SCREEN ---
       GoRoute(
@@ -37,10 +35,7 @@ class AppRouter {
         builder: (context, state) {
           return SplashScreen(
             onFinished: () {
-              // 1. Tandai splash selesai
               _splashShown = true;
-
-              // 2. Cek login manual & navigasi
               if (FirebaseAuth.instance.currentUser != null) {
                 context.go('/');
               } else {
@@ -53,93 +48,101 @@ class AppRouter {
 
       // --- AUTH ROUTES ---
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-      GoRoute(
-        path: '/register',
-        builder: (context, state) => const RegisterPage(),
-      ),
+      GoRoute(path: '/register', builder: (context, state) => const RegisterPage()),
 
       // --- HOME ROUTE ---
       GoRoute(
         path: '/',
         builder: (context, state) => const HomePage(),
         routes: [
-          // 1. MOVIES (Lihat semua film)
+          // 1. MOVIES & TICKET ROUTES (Diperbaiki)
           GoRoute(
             path: 'movies',
             builder: (context, state) => const MoviesPage(),
+            // Tambahkan routes bertingkat disini
+            routes: [
+              // Menangani ID film: /movies/123
+              GoRoute(
+                path: ':id', 
+                builder: (context, state) {
+                  // Jika Anda punya MovieDetailPage, return di sini.
+                  // Jika tidak, kita bisa redirect atau tampilkan MoviesPage lagi sementara.
+                  return const MoviesPage(); 
+                },
+                routes: [
+                  // Menangani Tiket: /movies/123/ticket
+                  GoRoute(
+                    path: 'ticket',
+                    builder: (context, state) {
+                      // Mengambil data movie dari 'extra'
+                      // Pastikan saat navigasi Anda mengirim object movie: 
+                      // context.go('/movies/${movie.id}/ticket', extra: movie);
+                      final movie = state.extra as MovieModel;
+                      return MovieTicketPage(movie: movie);
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
 
-          // 2. CINEMAS (Lokasi Bioskop)
+          // 2. CINEMAS
           GoRoute(
             path: 'cinemas',
             pageBuilder: (context, state) {
               return CustomTransitionPage(
                 key: state.pageKey,
                 child: const CinemasPage(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                      // Animasi Slide dari Kanan
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(1.0, 0.0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      );
-                    },
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(1.0, 0.0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  );
+                },
               );
             },
           ),
 
-          // 3. MOVIE TICKET (Detail Pemesanan)
-          GoRoute(
-            path: 'movie-ticket',
-            builder: (context, state) {
-              // Mengambil data movie yang dikirim via 'extra'
-              final movie = state.extra as MovieModel;
-              return MovieTicketPage(movie: movie);
-            },
-          ),
-
-          // 4. MY ORDERS (Riwayat Pesanan)
+          // 3. MOVIE TICKET (OLD) - Hapus atau biarkan jika masih dipakai via path lama
+          // Sebaiknya dihapus agar konsisten dengan struktur baru '/movies/:id/ticket'
+          
+          // 4. MY ORDERS
           GoRoute(
             path: 'my-orders',
             builder: (context, state) => const MyOrdersPage(),
           ),
 
-          // 5. PROFILE (Halaman Profil User)
+          // 5. PROFILE
           GoRoute(
             path: 'profile',
             builder: (context, state) => const ProfilePage(),
           ),
 
-          // 6. FOOD ORDER (Fitur m.food)
+          // 6. FOOD ORDER
           GoRoute(
             path: 'food',
             pageBuilder: (context, state) {
               return CustomTransitionPage(
                 key: state.pageKey,
                 child: const FoodOrderPage(),
-                transitionsBuilder:
-                    (context, animation, secondaryAnimation, child) {
-                      // Animasi Slide dari Bawah (Naik ke atas)
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0.0, 1.0),
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      );
-                    },
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  return SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.0, 1.0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  );
+                },
               );
             },
             routes: [
-              // Sub-route: Checkout Makanan
-              // Path lengkap: /food/food-checkout
               GoRoute(
                 path: 'food-checkout',
                 builder: (context, state) {
-                  // Menerima List Cart Items via 'extra'
                   final cartItems = state.extra as List<Map<String, dynamic>>;
                   return FoodCheckoutPage(cartItems: cartItems);
                 },
@@ -154,38 +157,30 @@ class AppRouter {
     redirect: (BuildContext context, GoRouterState state) {
       final bool isLoggedIn = (FirebaseAuth.instance.currentUser != null);
       final String location = state.matchedLocation;
-
       final bool isAuthPage = (location == '/login' || location == '/register');
       final bool isSplashPage = location == '/splash';
 
-      // 1. Selalu tampilkan splash screen dulu jika belum pernah tampil
       if (!_splashShown && !isSplashPage) {
         return '/splash';
       }
 
-      // 2. Jika sedang di splash tapi sudah selesai (otomatis pindah),
-      // cek login status
       if (_splashShown && isSplashPage) {
         return isLoggedIn ? '/' : '/login';
       }
 
-      // 3. Jika User BELUM Login
       if (!isLoggedIn && !isSplashPage) {
-        // Larang akses ke halaman selain login/register
         if (!isAuthPage) {
           return '/login';
         }
       }
 
-      // 4. Jika User SUDAH Login
       if (isLoggedIn && !isSplashPage) {
-        // Larang akses kembali ke halaman login/register
         if (isAuthPage) {
           return '/';
         }
       }
 
-      return null; // Tidak ada redirect
+      return null;
     },
   );
 }

@@ -3,7 +3,10 @@ import 'package:cinema_noir/core/api/tmdb_service.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class MovieTicketPage extends StatefulWidget {
   final MovieModel? movie;
@@ -66,17 +69,93 @@ class _MovieTicketPageState extends State<MovieTicketPage> {
     }
   }
 
-  void _purchaseTicket() {
+  Future<void> _purchaseTicket() async {
     final movie = widget.movie;
     if (movie == null) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Tiket "${movie.title}" berhasil ditambahkan ke keranjang!'),
-        backgroundColor: AppColors.gold,
-        behavior: SnackBarBehavior.floating,
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Silakan login untuk membeli tiket.')),
+      );
+      return;
+    }
+
+    // --- Show Loading Dialog ---
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: AppColors.gold),
       ),
     );
+
+    try {
+      // Ambil data user dari Firestore
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final userName = userDoc.data()?['name'] ?? user.email ?? 'Pengguna';
+      
+      // Data Tiket (beberapa hardcoded untuk simulasi)
+      final ticketData = {
+        'userId': user.uid,
+        'userName': userName,
+        'type': 'ticket',
+        'movieTitle': movie.title,
+        'posterUrl': movie.getFullPosterUrl(),
+        'cinemaName': 'Cinema Noir XXI', // Dummy
+        'seats': ['C8', 'C9'], // Dummy
+        'schedule': Timestamp.fromDate(DateTime.now().add(const Duration(hours: 2))), // Dummy
+        'totalPrice': 100000, // Dummy
+        'status': 'Paid',
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
+      // Simpan ke Firestore
+      await FirebaseFirestore.instance.collection('orders').add(ticketData);
+
+      if (!mounted) return;
+
+      context.pop(); // Tutup loading dialog
+
+      // Tampilkan Dialog Sukses
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppColors.darkGrey,
+          title: const Icon(
+            Icons.check_circle,
+            color: AppColors.gold,
+            size: 50,
+          ),
+          content: const Text(
+            'Pembelian Tiket Berhasil!',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                context.go('/my-orders'); // Navigasi ke halaman pesanan saya
+              },
+              child: const Text(
+                'Lihat Tiket',
+                style: TextStyle(
+                  color: AppColors.gold,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      context.pop(); // Tutup loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memproses pembelian: $e')),
+      );
+    }
   }
 
   @override
