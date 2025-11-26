@@ -1,9 +1,10 @@
-// lib/features/community/data/datasources/community_remote_datasource.dart
+﻿// lib/features/community/data/datasources/community_remote_datasource.dart
 
 import 'package:dio/dio.dart';
 import 'package:cinema_noir/core/constants/api_constants.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/community/data/models/movie_detail_model.dart';
+import 'package:cinema_noir/features/community/data/models/genre_model.dart';
 
 class CommunityRemoteDataSource {
   final Dio _dio;
@@ -36,10 +37,10 @@ class CommunityRemoteDataSource {
           .map((movieJson) => MovieModel.fromJson(movieJson))
           .toList();
     } on DioException catch (e) {
-      print('Dio Error getPopularMovies: $e');
+      print('Dio Error getPopularMovies: ');
       rethrow;
     } catch (e) {
-      print('Error getPopularMovies: $e');
+      print('Error getPopularMovies: ');
       rethrow;
     }
   }
@@ -60,10 +61,10 @@ class CommunityRemoteDataSource {
           .map((movieJson) => MovieModel.fromJson(movieJson))
           .toList();
     } on DioException catch (e) {
-      print('Dio Error getDiscoverMovies: $e');
+      print('Dio Error getDiscoverMovies: ');
       rethrow;
     } catch (e) {
-      print('Error getDiscoverMovies: $e');
+      print('Error getDiscoverMovies: ');
       rethrow;
     }
   }
@@ -157,10 +158,10 @@ class CommunityRemoteDataSource {
           .map((movieJson) => MovieModel.fromJson(movieJson))
           .toList();
     } on DioException catch (e) {
-      print('Dio Error searchMovies: $e');
+      print('Dio Error searchMovies: ');
       rethrow;
     } catch (e) {
-      print('Error searchMovies: $e');
+      print('Error searchMovies: ');
       rethrow;
     }
   }
@@ -182,10 +183,142 @@ class CommunityRemoteDataSource {
           .map((movieJson) => MovieModel.fromJson(movieJson))
           .toList();
     } on DioException catch (e) {
-      print('Dio Error getMoviesByGenre: $e');
+      print('Dio Error getMoviesByGenre: ');
       rethrow;
     } catch (e) {
-      print('Error getMoviesByGenre: $e');
+      print('Error getMoviesByGenre: ');
+      rethrow;
+    }
+  }
+
+  /// Get top rated movies
+  Future<List<MovieModel>> getTopRatedMovies({int page = 1}) async {
+    try {
+      final response = await _dio.get(
+        '/movie/top_rated',
+        queryParameters: {'page': page},
+      );
+      
+      final List results = response.data['results'] as List;
+      return results
+          .map((movieJson) => MovieModel.fromJson(movieJson))
+          .toList();
+    } on DioException catch (e) {
+      print('Dio Error getTopRatedMovies: ');
+      rethrow;
+    } catch (e) {
+      print('Error getTopRatedMovies: ');
+      rethrow;
+    }
+  }
+
+  /// Get upcoming movies
+  Future<List<MovieModel>> getUpcomingMovies({int page = 1}) async {
+    try {
+      final response = await _dio.get(
+        '/movie/upcoming',
+        queryParameters: {'page': page},
+      );
+      
+      final List results = response.data['results'] as List;
+      return results
+          .map((movieJson) => MovieModel.fromJson(movieJson))
+          .toList();
+    } on DioException catch (e) {
+      print('Dio Error getUpcomingMovies: ');
+      rethrow;
+    } catch (e) {
+      print('Error getUpcomingMovies: ');
+      rethrow;
+    }
+  }
+
+  /// Get trending movies
+  Future<List<MovieModel>> getTrendingMoviesFromAPI({int page = 1}) async {
+    try {
+      final response = await _dio.get(
+        '/trending/movie/day',
+        queryParameters: {'page': page},
+      );
+      
+      final List results = response.data['results'] as List;
+      return results
+          .map((movieJson) => MovieModel.fromJson(movieJson))
+          .toList();
+    } on DioException catch (e) {
+      print('Dio Error getTrendingMoviesFromAPI: ');
+      rethrow;
+    } catch (e) {
+      print('Error getTrendingMoviesFromAPI: ');
+      rethrow;
+    }
+  }
+
+  /// Get movies with custom sorting
+  Future<List<MovieModel>> getMoviesWithSorting({
+    int page = 1,
+    String sortBy = 'popularity.desc',
+    int? genreId,
+  }) async {
+    try {
+      Map<String, dynamic> queryParams = {
+        'page': page,
+        'sort_by': sortBy,
+      };
+
+      if (genreId != null) {
+        queryParams['with_genres'] = genreId;
+      }
+
+      final response = await _dio.get(
+        '/discover/movie',
+        queryParameters: queryParams,
+      );
+      
+      final List results = response.data['results'] as List;
+      List<MovieModel> movies = results
+          .map((movieJson) => MovieModel.fromJson(movieJson))
+          .toList();
+
+      // For alphabetical sorting, we need to sort locally since TMDB doesn't support title sorting
+      if (sortBy == 'title.asc') {
+        movies.sort((a, b) {
+          final titleA = a.title.toLowerCase().trim();
+          final titleB = b.title.toLowerCase().trim();
+          return titleA.compareTo(titleB);
+        });
+      } else if (sortBy == 'title.desc') {
+        movies.sort((a, b) {
+          final titleA = a.title.toLowerCase().trim();
+          final titleB = b.title.toLowerCase().trim();
+          return titleB.compareTo(titleA);
+        });
+      }
+
+      return movies;
+    } on DioException catch (e) {
+      print('Dio Error getMoviesWithSorting: ');
+      rethrow;
+    } catch (e) {
+      print('Error getMoviesWithSorting: ');
+      rethrow;
+    }
+  }
+
+  /// Get all available genres
+  Future<List<GenreModel>> getGenres() async {
+    try {
+      final response = await _dio.get('/genre/movie/list');
+      
+      final List genresList = response.data['genres'] as List;
+      return genresList
+          .map((genreJson) => GenreModel.fromJson(genreJson))
+          .toList();
+    } on DioException catch (e) {
+      print('Dio Error getGenres: ');
+      rethrow;
+    } catch (e) {
+      print('Error getGenres: ');
       rethrow;
     }
   }

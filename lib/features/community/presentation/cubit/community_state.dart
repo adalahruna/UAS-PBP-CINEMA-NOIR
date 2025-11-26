@@ -1,7 +1,8 @@
-// lib/features/community/presentation/cubit/community_state.dart
+﻿// lib/features/community/presentation/cubit/community_state.dart
 
 import 'package:equatable/equatable.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
+import 'package:cinema_noir/features/community/data/models/genre_model.dart';
 
 abstract class CommunityState extends Equatable {
   const CommunityState();
@@ -22,12 +23,18 @@ class CommunityLoaded extends CommunityState {
   final bool hasMoreMovies;
   final int currentPage;
   final bool isLoadingMore;
+  final SortType currentSort;
+  final int? currentGenreId;
+  final List<GenreModel> genres;
 
   const CommunityLoaded({
     required this.movies,
     required this.hasMoreMovies,
     required this.currentPage,
     this.isLoadingMore = false,
+    this.currentSort = SortType.popular,
+    this.currentGenreId,
+    this.genres = const [],
   });
 
   CommunityLoaded copyWith({
@@ -35,17 +42,24 @@ class CommunityLoaded extends CommunityState {
     bool? hasMoreMovies,
     int? currentPage,
     bool? isLoadingMore,
+    SortType? currentSort,
+    int? currentGenreId,
+    List<GenreModel>? genres,
+    bool clearGenre = false,
   }) {
     return CommunityLoaded(
       movies: movies ?? this.movies,
       hasMoreMovies: hasMoreMovies ?? this.hasMoreMovies,
       currentPage: currentPage ?? this.currentPage,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      currentSort: currentSort ?? this.currentSort,
+      currentGenreId: clearGenre ? null : (currentGenreId ?? this.currentGenreId),
+      genres: genres ?? this.genres,
     );
   }
 
   @override
-  List<Object?> get props => [movies, hasMoreMovies, currentPage, isLoadingMore];
+  List<Object?> get props => [movies, hasMoreMovies, currentPage, isLoadingMore, currentSort, currentGenreId, genres];
 }
 
 // Error state

@@ -1,9 +1,10 @@
-// lib/features/community/data/repositories/community_repository.dart
+﻿// lib/features/community/data/repositories/community_repository.dart
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/community/data/models/movie_detail_model.dart';
 import 'package:cinema_noir/features/community/data/models/user_review_model.dart';
+import 'package:cinema_noir/features/community/data/models/genre_model.dart';
 import 'package:cinema_noir/features/community/data/datasources/community_remote_datasource.dart';
 import 'package:cinema_noir/features/community/data/datasources/review_local_datasource.dart';
 
@@ -26,20 +27,19 @@ class CommunityRepository {
   }
 
   /// Get movie details with additional info
-  /// INI BAGIAN YANG DIUBAH AGAR REVIEW USER LAIN DI ATAS
   Future<MovieDetailModel> getMovieDetails(int movieId) async {
     // 1. Ambil data dari TMDB dan Firestore
     final movieDetail = await _remoteDataSource.getMovieDetails(movieId);
     final userReviews = await _reviewDataSource.getReviewsForMovie(movieId);
-    
+
     // 2. Ambil ID user yang sedang login
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
     // 3. Filter & Convert Review Firestore
-    // Kita exclude (buang) review milik diri sendiri agar tidak muncul double 
-    // (karena di UI sudah ada bagian khusus "Your Review")
+    // Kita exclude (buang) review milik diri sendiri agar tidak muncul double
+    // (karena di UI sudah ada bagian khusus 'Your Review')
     final firestoreReviews = userReviews
-        .where((r) => r.userId != currentUserId) 
+        .where((r) => r.userId != currentUserId)
         .map((userReview) => ReviewModel(
           id: userReview.id,
           author: userReview.userName,
@@ -108,8 +108,41 @@ class CommunityRepository {
     return await _reviewDataSource.getMovieRatingStats(movieId);
   }
 
-  /// Get trending movies
+  /// Get trending movies from local data
   Future<List<Map<String, dynamic>>> getTrendingMovies() async {
     return await _reviewDataSource.getTrendingMovies();
+  }
+
+  /// Get trending movies from TMDB API
+  Future<List<MovieModel>> getTrendingMoviesFromAPI({int page = 1}) async {
+    return await _remoteDataSource.getTrendingMoviesFromAPI(page: page);
+  }
+
+  /// Get top rated movies
+  Future<List<MovieModel>> getTopRatedMovies({int page = 1}) async {
+    return await _remoteDataSource.getTopRatedMovies(page: page);
+  }
+
+  /// Get upcoming movies
+  Future<List<MovieModel>> getUpcomingMovies({int page = 1}) async {
+    return await _remoteDataSource.getUpcomingMovies(page: page);
+  }
+
+  /// Get movies with custom sorting
+  Future<List<MovieModel>> getMoviesWithSorting({
+    int page = 1,
+    String sortBy = 'popularity.desc',
+    int? genreId,
+  }) async {
+    return await _remoteDataSource.getMoviesWithSorting(
+      page: page,
+      sortBy: sortBy,
+      genreId: genreId,
+    );
+  }
+
+  /// Get all available genres
+  Future<List<GenreModel>> getGenres() async {
+    return await _remoteDataSource.getGenres();
   }
 }

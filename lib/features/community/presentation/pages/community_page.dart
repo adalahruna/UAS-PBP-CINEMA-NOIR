@@ -1,5 +1,6 @@
 ﻿// lib/features/community/presentation/pages/community_page.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +10,8 @@ import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/community/presentation/cubit/community_cubit.dart';
 import 'package:cinema_noir/features/community/presentation/cubit/community_state.dart';
-import 'package:cinema_noir/features/community/data/repositories/community_repository.dart';
+import 'package:cinema_noir/features/community/presentation/widgets/enhanced_sort_widget.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CommunityPage extends StatefulWidget {
   const CommunityPage({super.key});
@@ -20,8 +22,11 @@ class CommunityPage extends StatefulWidget {
 
 class _CommunityPageState extends State<CommunityPage> {
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
+  String _searchQuery = '';
   bool _isSearchMode = false;
+  List<MovieModel> _searchResults = [];
+  bool _showBackToTop = false;
 
   @override
   void initState() {
@@ -32,89 +37,153 @@ class _CommunityPageState extends State<CommunityPage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _searchController.dispose();
+    _debounceTimer?.cancel();
     super.dispose();
   }
 
   void _onScroll() {
+    // Pagination logic
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent * 0.8) {
-      final state = context.read<CommunityCubit>().state;
-      if (state is CommunityLoaded && state.hasMoreMovies && !state.isLoadingMore) {
-        context.read<CommunityCubit>().loadMoreMovies();
-      } else if (state is CommunitySearchLoaded && state.hasMoreResults) {
-        context.read<CommunityCubit>().searchMovies(state.query);
+      if (_isSearchMode) {
+        final state = context.read<CommunityCubit>().state;
+        if (state is CommunitySearchLoaded && state.hasMoreResults) {
+          context.read<CommunityCubit>().searchMovies(state.query);
+        }
+      } else {
+        context.read<CommunityCubit>().loadMoreSortedMovies();
       }
     }
+
+    // Back to Top visibility logic
+    if (_scrollController.offset >= 400) {
+      if (!_showBackToTop) setState(() => _showBackToTop = true);
+    } else {
+      if (_showBackToTop) setState(() => _showBackToTop = false);
+    }
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   void _onSearchChanged(String query) {
-    if (query.trim().isEmpty) {
-      if (_isSearchMode) {
-        setState(() => _isSearchMode = false);
-        context.read<CommunityCubit>().clearSearch();
+    setState(() {
+      _searchQuery = query.trim();
+    });
+
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (_searchQuery.isEmpty) {
+        if (_isSearchMode) {
+          setState(() {
+            _isSearchMode = false;
+            _searchResults.clear();
+          });
+          context.read<CommunityCubit>().clearSearch();
+        }
+      } else {
+        setState(() => _isSearchMode = true);
+        context.read<CommunityCubit>().searchMovies(_searchQuery, refresh: true);
       }
-    } else {
-      if (!_isSearchMode) setState(() => _isSearchMode = true);
-      context.read<CommunityCubit>().searchMovies(query, refresh: true);
-    }
+    });
   }
 
-  void _navigateToMovieDetail(MovieModel movie) {
+  void _onMovieSelected(MovieModel movie) {
     context.push('/community/movie/${movie.id}', extra: movie);
+  }
+
+  void _onClearSearch() {
+    setState(() {
+      _searchQuery = '';
+      _isSearchMode = false;
+      _searchResults.clear();
+    });
+    context.read<CommunityCubit>().clearSearch();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => CommunityCubit(CommunityRepository())..loadCommunityMovies(),
-      child: Scaffold(
-        backgroundColor: AppColors.darkBackground,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(),
-              _buildSearchBar(),
-              Expanded(child: _buildMovieGrid()),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: AppColors.darkBackground,
+      floatingActionButton: _showBackToTop
+          ? FloatingActionButton(
+              onPressed: _scrollToTop,
+              backgroundColor: AppColors.gold,
+              child: const Icon(Icons.arrow_upward, color: AppColors.darkBackground),
+            )
+          : null,
+      body: SafeArea(
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // AppBar, Search, and Filters in Slivers so they scroll away
+            SliverToBoxAdapter(child: _buildAppBar()),
+            SliverToBoxAdapter(child: _buildSearchSection()),
+            SliverToBoxAdapter(child: _buildFiltersSection()),
+            // The Grid
+            _buildMoviesGridSliver(),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildAppBar() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final titleFontSize = isSmallScreen ? 20.0 : 24.0;
+    final iconSize = isSmallScreen ? 24.0 : 28.0;
+    final padding = isSmallScreen ? 12.0 : 16.0;
+    final user = FirebaseAuth.instance.currentUser;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: padding, 
+        vertical: padding * 0.75,
+      ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => context.pop(),
-            icon: const Icon(Icons.arrow_back_ios, color: AppColors.white, size: 24),
-          ),
-          const SizedBox(width: 8),
-          const Text(
+          Text(
             'Community',
             style: TextStyle(
               color: AppColors.gold,
-              fontSize: 24,
+              fontSize: titleFontSize,
               fontWeight: FontWeight.bold,
             ),
           ),
           const Spacer(),
-          IconButton(
-            onPressed: () {
-              final cubit = context.read<CommunityCubit>();
-              if (_isSearchMode) {
-                cubit.clearSearch();
-              } else {
-                cubit.refresh();
-              }
-            },
-            icon: Icon(
-              _isSearchMode ? Icons.clear : Icons.refresh,
-              color: AppColors.white,
-              size: 24,
+          // IconButton(
+          //   onPressed: () {
+          //     final cubit = context.read<CommunityCubit>();
+          //     if (_isSearchMode) {
+          //       cubit.clearSearch();
+          //     } else {
+          //       cubit.initialize();
+          //     }
+          //   },
+          //   icon: Icon(
+          //     Icons.refresh,
+          //     color: AppColors.gold,
+          //     size: iconSize,
+          //   ),
+          // ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => context.push('/profile'),
+            child: CircleAvatar(
+              radius: 25,
+              backgroundColor: AppColors.darkGrey,
+              backgroundImage: user?.photoURL != null
+                  ? NetworkImage(user!.photoURL!)
+                  : null,
+              child: user?.photoURL == null
+                  ? const Icon(Icons.person, color: AppColors.gold, size: 30)
+                  : null,
             ),
           ),
         ],
@@ -122,127 +191,149 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.darkGrey,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.gold.withOpacity(0.3),
-          width: 1,
+  Widget _buildSearchSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double width = screenWidth < 400 ? screenWidth * 0.85 : 320;
+
+    return Center(
+      child: Container(
+        width: width,
+        margin: const EdgeInsets.symmetric(vertical: 12),
+        child: TextField(
+          onChanged: _onSearchChanged,
+          decoration: InputDecoration(
+            hintText: 'Cari film',
+            hintStyle: const TextStyle(color: AppColors.textGrey),
+            prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            filled: true,
+            fillColor: AppColors.darkGrey,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(28),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(28),
+              borderSide: const BorderSide(color: AppColors.gold, width: 2),
+            ),
+          ),
+          style: const TextStyle(color: AppColors.textWhite),
         ),
-      ),
-      child: TextField(
-        controller: _searchController,
-        style: const TextStyle(color: AppColors.white, fontSize: 16),
-        decoration: const InputDecoration(
-          hintText: 'Search movies...',
-          hintStyle: TextStyle(color: AppColors.grey, fontSize: 16),
-          prefixIcon: Icon(Icons.search, color: AppColors.gold, size: 24),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        ),
-        onChanged: _onSearchChanged,
       ),
     );
   }
 
-  Widget _buildMovieGrid() {
+  Widget _buildFiltersSection() {
+    return BlocBuilder<CommunityCubit, CommunityState>(
+      builder: (context, state) {
+        if (state is CommunityLoaded && !_isSearchMode) {
+          final padding = 10.0;
+          
+          return Container(
+            padding: EdgeInsets.symmetric(vertical: padding),
+            child: EnhancedSortWidget(
+              selectedSort: state.currentSort,
+              selectedGenreId: state.currentGenreId,
+              genres: state.genres,
+              onSortChanged: (sortType) {
+                try {
+                  context.read<CommunityCubit>().changeSorting(sortType);
+                } catch (e) {
+                  debugPrint('Error changing sort: ');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to change sorting: '),
+                      backgroundColor: Colors.red.shade700,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              onGenreChanged: (genreId) {
+                try {
+                  context.read<CommunityCubit>().changeGenre(genreId);
+                } catch (e) {
+                  debugPrint('Error changing genre: ');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to change genre: '),
+                      backgroundColor: Colors.red.shade700,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+              isLoadingGenres: state.genres.isEmpty,
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  Widget _buildMoviesGridSliver() {
     return BlocBuilder<CommunityCubit, CommunityState>(
       builder: (context, state) {
         if (state is CommunityLoading) {
-          return _buildLoadingGrid();
+          return _buildLoadingGridSliver();
         }
 
-        if (state is CommunityError || state is CommunitySearchError) {
-          final message = state is CommunityError
-              ? state.message
-              : (state as CommunitySearchError).message;
-          return _buildErrorWidget(message);
+        if (state is CommunityError) {
+          return SliverToBoxAdapter(child: _buildErrorWidget(state.message));
+        }
+
+        if (state is CommunitySearchLoading) {
+          return _buildLoadingGridSliver();
+        }
+
+        if (state is CommunitySearchError) {
+          return SliverToBoxAdapter(child: _buildErrorWidget(state.message));
         }
 
         List<MovieModel> movies = [];
         bool hasMore = false;
         bool isLoadingMore = false;
 
-        if (state is CommunityLoaded) {
+        if (state is CommunityLoaded && !_isSearchMode) {
           movies = state.movies;
           hasMore = state.hasMoreMovies;
           isLoadingMore = state.isLoadingMore;
-        } else if (state is CommunitySearchLoaded) {
+        } else if (state is CommunitySearchLoaded && _isSearchMode) {
           movies = state.searchResults;
           hasMore = state.hasMoreResults;
         }
 
         if (movies.isEmpty) {
-          return _buildEmptyWidget();
+          return SliverToBoxAdapter(child: _buildEmptyState());
         }
 
-        return RefreshIndicator(
-          onRefresh: () async {
-            await context.read<CommunityCubit>().refresh();
-          },
-          color: AppColors.gold,
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                sliver: SliverGrid(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: _getCrossAxisCount(),
-                    childAspectRatio: 0.7,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 16,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      return _buildMovieCard(movies[index]);
-                    },
-                    childCount: movies.length,
-                  ),
-                ),
-              ),
-              if (hasMore || isLoadingMore)
-                SliverToBoxAdapter(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: isLoadingMore
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.gold,
-                            ),
-                          )
-                        : Center(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                context.read<CommunityCubit>().loadMoreMovies();
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.gold,
-                                foregroundColor: AppColors.darkBackground,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Text(
-                                'Load More Movies',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                  ),
-                ),
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            ],
+        final screenWidth = MediaQuery.of(context).size.width;
+        final isSmallScreen = screenWidth < 600;
+        final gridPadding = isSmallScreen ? 12.0 : 16.0;
+        final gridSpacing = isSmallScreen ? 12.0 : 16.0;
+        
+        return SliverPadding(
+          padding: EdgeInsets.all(gridPadding),
+          sliver: SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: _getCrossAxisCount(),
+              mainAxisSpacing: gridSpacing,
+              crossAxisSpacing: gridSpacing,
+              childAspectRatio: 0.65,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                if (index >= movies.length) {
+                   // Loading indicator at bottom
+                   return const Center(
+                      child: CircularProgressIndicator(color: AppColors.gold),
+                   );
+                }
+                return _buildMovieCard(movies[index]);
+              },
+              childCount: movies.length + (isLoadingMore || hasMore ? 1 : 0),
+            ),
           ),
         );
       },
@@ -250,27 +341,31 @@ class _CommunityPageState extends State<CommunityPage> {
   }
 
   int _getCrossAxisCount() {
-    final width = MediaQuery.of(context).size.width;
-    if (width > 1200) return 6;
-    if (width > 900) return 4;
-    if (width > 600) return 3;
+    final screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth > 1200) return 5;
+    if (screenWidth > 800) return 4;
+    if (screenWidth > 600) return 3;
     return 2;
   }
 
   Widget _buildMovieCard(MovieModel movie) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final cardPadding = isSmallScreen ? 6.0 : 8.0;
+    final titleFontSize = isSmallScreen ? 11.0 : 12.0;
+    final metaFontSize = isSmallScreen ? 9.0 : 10.0;
+    final starSize = isSmallScreen ? 12.0 : 14.0;
+    final iconSize = isSmallScreen ? 20.0 : 24.0;
+    
     return GestureDetector(
-      onTap: () => _navigateToMovieDetail(movie),
+      onTap: () => _onMovieSelected(movie),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.darkGrey,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.gold.withOpacity(0.2),
-            width: 1,
-          ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.gold.withOpacity(0.1),
+              color: Colors.black.withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -287,20 +382,17 @@ class _CommunityPageState extends State<CommunityPage> {
                   imageUrl: movie.getFullPosterUrl(),
                   fit: BoxFit.cover,
                   width: double.infinity,
-                  placeholder: (context, url) => Container(
-                    color: AppColors.grey,
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.gold,
-                      ),
-                    ),
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: AppColors.darkGrey,
+                    highlightColor: AppColors.darkGrey.withOpacity(0.7),
+                    child: Container(color: AppColors.darkGrey),
                   ),
                   errorWidget: (context, url, error) => Container(
-                    color: AppColors.grey,
-                    child: const Icon(
+                    color: AppColors.darkGrey,
+                    child: Icon(
                       Icons.broken_image,
-                      color: AppColors.white,
-                      size: 32,
+                      color: AppColors.textGrey,
+                      size: iconSize,
                     ),
                   ),
                 ),
@@ -309,39 +401,45 @@ class _CommunityPageState extends State<CommunityPage> {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(cardPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Text(
-                        movie.title,
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      movie.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.star,
                           color: AppColors.gold,
-                          size: 16,
+                          size: starSize,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           movie.voteAverage.toStringAsFixed(1),
-                          style: const TextStyle(
-                            color: AppColors.grey,
-                            fontSize: 12,
+                          style: TextStyle(
+                            color: AppColors.textGrey,
+                            fontSize: metaFontSize,
                           ),
                         ),
+                        const Spacer(),
+                        if (movie.releaseDate != null && movie.releaseDate!.isNotEmpty)
+                          Text(
+                            movie.releaseDate!.substring(0, 4),
+                            style: TextStyle(
+                              color: AppColors.textGrey,
+                              fontSize: metaFontSize,
+                            ),
+                          ),
                       ],
                     ),
                   ],
@@ -354,116 +452,135 @@ class _CommunityPageState extends State<CommunityPage> {
     );
   }
 
-  Widget _buildLoadingGrid() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
+  Widget _buildLoadingGridSliver() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final gridPadding = isSmallScreen ? 12.0 : 16.0;
+    final gridSpacing = isSmallScreen ? 12.0 : 16.0;
+    
+    return SliverPadding(
+      padding: EdgeInsets.all(gridPadding),
+      sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: _getCrossAxisCount(),
-          childAspectRatio: 0.7,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 16,
+          mainAxisSpacing: gridSpacing,
+          crossAxisSpacing: gridSpacing,
+          childAspectRatio: 0.65,
         ),
-        itemCount: 12,
-        itemBuilder: (context, index) {
-          return Shimmer.fromColors(
-            baseColor: AppColors.darkGrey,
-            highlightColor: AppColors.gold.withOpacity(0.2),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.darkGrey,
-                borderRadius: BorderRadius.circular(12),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            return Shimmer.fromColors(
+              baseColor: AppColors.darkGrey,
+              highlightColor: AppColors.darkGrey.withOpacity(0.7),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.darkGrey,
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+          childCount: 10,
+        ),
       ),
     );
   }
 
   Widget _buildErrorWidget(String message) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final padding = isSmallScreen ? 12.0 : 16.0;
+    final iconSize = isSmallScreen ? 40.0 : 48.0;
+    final titleFontSize = isSmallScreen ? 16.0 : 18.0;
+    final bodyFontSize = isSmallScreen ? 12.0 : 14.0;
+    
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.error_outline,
-            color: AppColors.gold,
-            size: 64,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Oops! Something went wrong',
-            style: TextStyle(
-              color: AppColors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: AppColors.textGrey,
+              size: iconSize,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: const TextStyle(
-              color: AppColors.grey,
-              fontSize: 14,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => context.read<CommunityCubit>().refresh(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.gold,
-              foregroundColor: AppColors.darkBackground,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: const Text(
-              'Try Again',
+            SizedBox(height: padding),
+            Text(
+              'Oops! Something went wrong',
               style: TextStyle(
-                fontSize: 16,
+                color: AppColors.textWhite,
+                fontSize: titleFontSize,
                 fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-        ],
+            SizedBox(height: padding * 0.5),
+            Text(
+              message,
+              style: TextStyle(
+                color: AppColors.textGrey,
+                fontSize: bodyFontSize,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: padding),
+            ElevatedButton(
+              onPressed: () {
+                context.read<CommunityCubit>().initialize();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.gold,
+                foregroundColor: AppColors.darkBackground,
+              ),
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildEmptyWidget() {
+  Widget _buildEmptyState() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    final padding = isSmallScreen ? 12.0 : 16.0;
+    final iconSize = isSmallScreen ? 40.0 : 48.0;
+    final titleFontSize = isSmallScreen ? 16.0 : 18.0;
+    final bodyFontSize = isSmallScreen ? 12.0 : 14.0;
+    
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.movie_outlined,
-            color: AppColors.gold,
-            size: 64,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _isSearchMode ? 'No movies found' : 'No movies available',
-            style: const TextStyle(
-              color: AppColors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.movie_outlined,
+              color: AppColors.textGrey,
+              size: iconSize,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _isSearchMode
-                ? 'Try searching with different keywords'
-                : 'Check back later for new movies',
-            style: const TextStyle(
-              color: AppColors.grey,
-              fontSize: 14,
+            SizedBox(height: padding),
+            Text(
+              _isSearchMode ? 'No movies found' : 'No movies available',
+              style: TextStyle(
+                color: AppColors.textWhite,
+                fontSize: titleFontSize,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            SizedBox(height: padding * 0.5),
+            Text(
+              _isSearchMode 
+                  ? 'Try searching with different keywords'
+                  : 'Check back later for more content',
+              style: TextStyle(
+                color: AppColors.textGrey,
+                fontSize: bodyFontSize,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

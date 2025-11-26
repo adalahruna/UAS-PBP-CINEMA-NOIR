@@ -1,5 +1,6 @@
 ﻿import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 // --- Import Halaman-Halaman ---
@@ -21,6 +22,8 @@ import 'package:cinema_noir/features/food_order/presentation/pages/food_checkout
 // --- Import Fitur Community ---
 import 'package:cinema_noir/features/community/presentation/pages/community_page.dart';
 import 'package:cinema_noir/features/community/presentation/pages/movie_detail_page.dart';
+import 'package:cinema_noir/features/community/presentation/cubit/community_cubit.dart';
+import 'package:cinema_noir/features/community/data/repositories/community_repository.dart';
 // ---------------------------
 
 import 'auth_stream_listener.dart';
@@ -67,11 +70,11 @@ class AppRouter {
             routes: [
               // Menangani ID film: /movies/123
               GoRoute(
-                path: ':id', 
+                path: ':id',
                 builder: (context, state) {
                   // Jika Anda punya MovieDetailPage, return di sini.
                   // Jika tidak, kita bisa redirect atau tampilkan MoviesPage lagi sementara.
-                  return const MoviesPage(); 
+                  return const MoviesPage();
                 },
                 routes: [
                   // Menangani Tiket: /movies/123/ticket
@@ -79,8 +82,8 @@ class AppRouter {
                     path: 'ticket',
                     builder: (context, state) {
                       // Mengambil data movie dari 'extra'
-                      // Pastikan saat navigasi Anda mengirim object movie: 
-                      // context.go('/movies/${movie.id}/ticket', extra: movie);
+                      // Pastikan saat navigasi Anda mengirim object movie:
+                      // context.go('/movies//ticket', extra: movie);
                       final movie = state.extra as MovieModel;
                       return MovieTicketPage(movie: movie);
                     },
@@ -116,7 +119,10 @@ class AppRouter {
             pageBuilder: (context, state) {
               return CustomTransitionPage(
                 key: state.pageKey,
-                child: const CommunityPage(),
+                child: BlocProvider(
+                  create: (context) => CommunityCubit(CommunityRepository())..initialize(),
+                  child: const CommunityPage(),
+                ),
                 transitionsBuilder: (context, animation, secondaryAnimation, child) {
                   return SlideTransition(
                     position: Tween<Offset>(
