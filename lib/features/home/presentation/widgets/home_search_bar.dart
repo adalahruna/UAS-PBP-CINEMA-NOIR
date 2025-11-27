@@ -217,7 +217,6 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
         ],
       ),
       onTap: () {
-        _removeOverlay();
         context.push('/movies/${movie.id}/ticket', extra: movie);
       },
     );
@@ -237,7 +236,6 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
         style: const TextStyle(color: AppColors.textGrey, fontSize: 12),
       ),
       onTap: () {
-        _removeOverlay();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Selected Cinema: ${cinema.name}')),
         );

@@ -8,6 +8,8 @@ import 'package:cinema_noir/core/api/tmdb_service.dart';
 import 'package:cinema_noir/features/home/presentation/cubit/movie_cubit.dart';
 import 'package:cinema_noir/features/home/presentation/cubit/movie_state.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
+import 'package:cinema_noir/features/auth/presentation/cubit/auth_state.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
@@ -248,21 +250,57 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(width: 8.0),
                 Flexible(
-                  child: TextButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.location_on_outlined, color: AppColors.textWhite, size: 18),
-                    label: const Text(
-                      'JABODETABEK',
-                      style: TextStyle(color: AppColors.textWhite, fontSize: 14),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      backgroundColor: AppColors.darkGrey,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
+                  child: BlocBuilder<AuthCubit, AuthState>(
+                    builder: (context, authState) {
+                      if (authState is Authenticated) {
+                        return StreamBuilder<DocumentSnapshot>(
+                          stream: FirebaseFirestore.instance.collection('users').doc(authState.user.uid).snapshots(),
+                          builder: (context, snapshot) {
+                            String location = 'JABODETABEK'; // Default
+                            if (snapshot.hasData && snapshot.data!.exists) {
+                              final data = snapshot.data!.data() as Map<String, dynamic>?;
+                              final city = data?['city'] as String?;
+                              if (city != null && city.isNotEmpty) {
+                                location = city;
+                              }
+                            }
+                            return TextButton.icon(
+                              onPressed: () => context.push('/profile'),
+                              icon: const Icon(Icons.location_on_outlined, color: AppColors.textWhite, size: 18),
+                              label: Text(
+                                location.toUpperCase(),
+                                style: const TextStyle(color: AppColors.textWhite, fontSize: 14),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                backgroundColor: AppColors.darkGrey,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }
+                      // Fallback for when not authenticated or in loading state
+                      return TextButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.location_on_outlined, color: AppColors.textWhite, size: 18),
+                        label: const Text(
+                          'JABODETABEK',
+                          style: TextStyle(color: AppColors.textWhite, fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          backgroundColor: AppColors.darkGrey,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -280,9 +318,7 @@ class _HomePageState extends State<HomePage> {
               IconButton(
                 icon: const Icon(Icons.person_outline, color: AppColors.gold),
                 tooltip: 'Profile',
-                onPressed: () {
-                  print('Profile icon pressed!');
-                },
+                onPressed: () => context.push('/profile'),
               ),
             ],
           ),
@@ -320,10 +356,10 @@ class _HomePageState extends State<HomePage> {
           onTap: () => context.go('/movies'),
         ),
         const SizedBox(width: 12.0),
-        const _CategoryIcon(
+        _CategoryIcon(
           icon: Icons.fastfood_outlined,
           label: 'm.food',
-          onTap: null,
+          onTap: () => context.push('/food'),
         ),
         const SizedBox(width: 12.0),
         // const _CategoryIcon(
