@@ -17,6 +17,9 @@ class AppColors {
   /// Warna abu-abu untuk teks sekunder/hint
   static const Color textGrey = Color(0xFF8A8A8A);
 
+  /// Warna abu-abu terang untuk status terisi/non-aktif
+  static const Color lightGrey = Color(0xFFBDBDBD);
+
   /// Warna container yang sedikit lebih terang dari background
   static const Color darkGrey = Color(0xFF1E1E1E);
 

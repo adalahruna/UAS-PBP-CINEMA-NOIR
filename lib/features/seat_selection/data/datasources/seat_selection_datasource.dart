@@ -23,11 +23,12 @@ class SeatSelectionDatasourceImpl implements SeatSelectionDatasource {
   }) async {
     try {
       final querySnapshot = await _firestore
-          .collection('bookings')
+          .collection('orders')
+          .where('type', isEqualTo: 'ticket')
           .where('movieId', isEqualTo: movieId)
           .where('date', isEqualTo: date)
           .where('time', isEqualTo: time)
-          .where('status', isEqualTo: 'success')
+          .where('status', isEqualTo: 'Paid')
           .get();
 
       final bookedSeats = <String>[];

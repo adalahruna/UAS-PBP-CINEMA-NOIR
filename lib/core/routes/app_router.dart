@@ -10,6 +10,7 @@ import 'package:cinema_noir/features/home/presentation/pages/home_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/movies_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/movie_ticket_page.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
+import 'package:cinema_noir/features/seat_selection/presentation/pages/seat_selection_page.dart';
 import 'package:cinema_noir/features/splash/presentation/pages/splash_screen.dart';
 import 'package:cinema_noir/features/cinemas/presentation/pages/cinemas_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/my_orders_page.dart';
@@ -81,12 +82,28 @@ class AppRouter {
                   GoRoute(
                     path: 'ticket',
                     builder: (context, state) {
-                      // Mengambil data movie dari 'extra'
-                      // Pastikan saat navigasi Anda mengirim object movie:
-                      // context.go('/movies//ticket', extra: movie);
-                      final movie = state.extra as MovieModel;
-                      return MovieTicketPage(movie: movie);
+                      final movie = state.extra as MovieModel?;
+                      final movieId = int.tryParse(state.pathParameters['id'] ?? '');
+                      return MovieTicketPage(movie: movie, movieId: movieId);
                     },
+                    routes: [
+                      GoRoute(
+                        path: 'seats',
+                        builder: (context, state) {
+                          final movie = state.extra as MovieModel?;
+                          final movieId = int.tryParse(state.pathParameters['id'] ?? '');
+                          final date = state.uri.queryParameters['date'];
+                          final time = state.uri.queryParameters['time'];
+                          return SeatSelectionPage(
+                            movieId: movieId!,
+                            date: date!,
+                            time: time!,
+                            movieTitle: movie?.title,
+                            posterUrl: movie?.getFullPosterUrl(),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -136,14 +153,14 @@ class AppRouter {
             },
             routes: [
               GoRoute(
-                path: 'movie/:id',
+                path: 'movie/:movieId',
                 pageBuilder: (context, state) {
                   final extra = state.extra;
                   return CustomTransitionPage(
                     key: state.pageKey,
                     child: MovieDetailPage(
                       movie: extra is MovieModel ? extra : MovieModel(
-                        id: int.parse(state.pathParameters['id']!),
+                        id: int.parse(state.pathParameters['movieId']!),
                         title: 'Movie',
                         overview: '',
                         voteAverage: 0.0,

@@ -51,6 +51,19 @@ class TmdbService {
     }
   }
 
+  Future<MovieModel> getMovieById(int movieId) async {
+    try {
+      final response = await _dio.get('/movie/$movieId');
+      return MovieModel.fromJson(response.data);
+    } on DioException catch (e) {
+      print('Dio Error getMovieById: $e');
+      rethrow;
+    } catch (e) {
+      print('Error getMovieById: $e');
+      rethrow;
+    }
+  }
+
   Future<List<MovieModel>> getNowPlayingMovies() async {
     try {
       final response = await _dio.get('/movie/now_playing');

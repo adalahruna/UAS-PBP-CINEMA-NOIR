@@ -3,15 +3,19 @@ import 'package:cinema_noir/app_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cinema_noir/firebase_options.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   // Pastikan Flutter binding sudah siap
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Inisialisasi data locale untuk intl (format tanggal Indonesia)
+  await initializeDateFormatting('id_ID', null);
+
   // Inisialisasi Firebase
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform);
-
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   await Supabase.initialize(
     url: 'https://msilqepklwsdvftecdov.supabase.co', 
