@@ -1,5 +1,6 @@
 // File: lib/features/home/presentation/pages/home_page.dart
 
+import 'package:cinema_noir/features/auth/presentation/cubit/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -13,6 +14,8 @@ import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/food_promo_section.dart';
 import 'package:go_router/go_router.dart';
+
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -43,7 +46,9 @@ class _HomePageState extends State<HomePage> {
             builder: (context, state) {
               if (state is MovieLoading) {
                 return const Center(
-                  child: CircularProgressIndicator(color: AppColors.gold),
+                  child: CircularProgressIndicator(
+                    color: AppColors.gold,
+                  ),
                 );
               }
 
@@ -59,9 +64,7 @@ class _HomePageState extends State<HomePage> {
               if (state is MovieLoaded) {
                 final double screenWidth = MediaQuery.of(context).size.width;
                 final bool isMobile = screenWidth < 768;
-                final filteredNowPlaying = _filterMovies(
-                  state.nowPlayingMovies,
-                );
+                final filteredNowPlaying = _filterMovies(state.nowPlayingMovies);
                 final filteredUpcoming = _filterMovies(state.upcomingMovies);
 
                 return SingleChildScrollView(
@@ -74,23 +77,20 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 24.0),
                       _buildIconButtons(context),
                       const SizedBox(height: 24.0),
-
+                      
                       _buildAdsCarousel(context, isMobile: isMobile),
-
+                      
                       const SizedBox(height: 24.0),
 
                       // SECTION 1: SEDANG TAYANG (HOVERABLE LIST)
                       _buildSectionHeader(
                         title: 'Sedang Tayang',
-                        onTapSeeAll: () =>
-                            context.go('/movies?category=now_playing'),
+                        onTapSeeAll: () => context.go('/movies?category=now_playing'),
                       ),
                       const SizedBox(height: 16.0),
-
+                      
                       if (filteredNowPlaying.isEmpty)
-                        _buildEmptyMovieMessage(
-                          'Tidak ada film yang sesuai pencarian.',
-                        )
+                        _buildEmptyMovieMessage('Tidak ada film yang sesuai pencarian.')
                       else
                         _buildCenteredSwipeableMovieList(
                           movies: filteredNowPlaying,
@@ -100,24 +100,22 @@ class _HomePageState extends State<HomePage> {
                             extra: movie,
                           ),
                         ),
-
+                      
                       const SizedBox(height: 24.0),
 
                       // SECTION 2: UPCOMING MOVIES
                       _buildSectionHeader(
                         title: 'Akan Tayang',
-                        onTapSeeAll: () =>
-                            context.go('/movies?category=upcoming'),
+                        onTapSeeAll: () => context.go('/movies?category=upcoming'),
                       ),
                       const SizedBox(height: 16.0),
 
                       if (filteredUpcoming.isEmpty)
-                        _buildEmptyMovieMessage(
-                          'Tidak ada film yang sesuai pencarian.',
-                        )
+                        _buildEmptyMovieMessage('Tidak ada film yang sesuai pencarian.')
                       else
                         _buildHorizontalMovieList(
                           movies: filteredUpcoming,
+                          isMobile: isMobile,
                           onBuyTicket: (movie) => context.push(
                             '/movies/${movie.id}/ticket',
                             extra: movie,
@@ -125,12 +123,12 @@ class _HomePageState extends State<HomePage> {
                         ),
 
                       const SizedBox(height: 24.0),
-
+                      
                       // SECTION 3: FOOD PROMO
                       const FoodPromoSection(),
 
                       const SizedBox(height: 40.0),
-
+                      
                       _buildFooter(),
                     ],
                   ),
@@ -145,27 +143,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<MovieModel> _filterMovies(List<MovieModel> movies) {
-    if (_searchQuery.isEmpty) {
-      return movies;
-    }
-
-    final query = _searchQuery.toLowerCase();
-    return movies
-        .where(
-          (movie) =>
-              movie.title.toLowerCase().contains(query) ||
-              movie.overview.toLowerCase().contains(query),
-        )
-        .toList();
-  }
-
   Widget _buildCenteredSwipeableMovieList({
     required List<MovieModel> movies,
     required bool isMobile,
     required void Function(MovieModel movie) onBuyTicket,
   }) {
-    final limitedMovies = movies.take(10).toList();
+    final limitedMovies = movies.take(10).toList(); 
     return _HoverableMovieList(
       movies: limitedMovies,
       isMobile: isMobile,
@@ -180,7 +163,7 @@ class _HomePageState extends State<HomePage> {
       'https://via.placeholder.com/600x350/9C27B0/FFFFFF?text=Iklan+Tiga',
       'https://via.placeholder.com/600x350/BF360C/FFFFFF?text=Iklan+Empat',
     ];
-
+    
     final double itemsPerView = isMobile ? 1.0 : 3.0;
     final double viewportFraction = isMobile ? 0.85 : (1.0 / itemsPerView);
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -189,19 +172,15 @@ class _HomePageState extends State<HomePage> {
       itemCount: adImages.length,
       itemBuilder: (context, index, realIndex) {
         return Container(
-          margin: EdgeInsets.symmetric(
-            horizontal: screenWidth * (isMobile ? 0.02 : 0.01),
-          ),
+          margin: EdgeInsets.symmetric(horizontal: screenWidth * (isMobile ? 0.02 : 0.01)),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: CachedNetworkImage(
               imageUrl: adImages[index],
               fit: BoxFit.cover,
               width: double.infinity,
-              placeholder: (context, url) =>
-                  Container(color: AppColors.darkGrey),
-              errorWidget: (context, url, error) =>
-                  Container(color: AppColors.darkGrey),
+              placeholder: (context, url) => Container(color: AppColors.darkGrey),
+              errorWidget: (context, url, error) => Container(color: AppColors.darkGrey),
             ),
           ),
         );
@@ -219,11 +198,12 @@ class _HomePageState extends State<HomePage> {
   Widget _buildHorizontalMovieList({
     required List<MovieModel> movies,
     required void Function(MovieModel movie) onBuyTicket,
+    required bool isMobile,
   }) {
     final limitedMovies = movies.take(10).toList();
 
     return Container(
-      height: 230,
+      height: isMobile ? 340 : 230,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: limitedMovies.length,
@@ -232,6 +212,7 @@ class _HomePageState extends State<HomePage> {
           final movie = limitedMovies[index];
           return _UpcomingMovieItem(
             movie: movie,
+            isMobile: isMobile,
             onBuyTicket: () => onBuyTicket(movie),
           );
         },
@@ -280,24 +261,14 @@ class _HomePageState extends State<HomePage> {
                 Flexible(
                   child: TextButton.icon(
                     onPressed: () {},
-                    icon: const Icon(
-                      Icons.location_on_outlined,
-                      color: AppColors.textWhite,
-                      size: 18,
-                    ),
+                    icon: const Icon(Icons.location_on_outlined, color: AppColors.textWhite, size: 18),
                     label: const Text(
                       'JABODETABEK',
-                      style: TextStyle(
-                        color: AppColors.textWhite,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: AppColors.textWhite, fontSize: 14),
                       overflow: TextOverflow.ellipsis,
                     ),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       backgroundColor: AppColors.darkGrey,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
@@ -311,31 +282,22 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(
-                  Icons.local_offer_outlined,
-                  color: AppColors.textWhite,
-                ),
+                icon: const Icon(Icons.local_offer_outlined, color: AppColors.textWhite),
                 tooltip: 'Promo',
                 onPressed: () {
                   print('Promo icon pressed!');
                 },
               ),
               IconButton(
-                icon: const Icon(
-                  Icons.receipt_long_outlined,
-                  color: AppColors.textWhite,
-                ),
-                tooltip: 'Pesanan Saya',
-                onPressed: () {
-                  // Navigasi ke halaman pesanan
-                  context.go('/my-orders');
-                },
-              ),
-              IconButton(
                 icon: const Icon(Icons.person_outline, color: AppColors.gold),
                 tooltip: 'Profile',
                 onPressed: () {
-                  context.go('/profile');
+                  final authState = context.read<AuthCubit>().state;
+                  if (authState is Authenticated) {
+                    context.go('/profile');
+                  } else {
+                    context.go('/login');
+                  }
                 },
               ),
             ],
@@ -362,7 +324,7 @@ class _HomePageState extends State<HomePage> {
           },
           decoration: InputDecoration(
             contentPadding: const EdgeInsets.symmetric(
-              vertical: 12.0,
+              vertical: 12.0, 
               horizontal: 16.0,
             ),
             hintText: 'Cari film',
@@ -388,17 +350,20 @@ class _HomePageState extends State<HomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _CategoryIcon(
+         _CategoryIcon(
           icon: Icons.theaters_outlined,
           label: 'Cinemas',
-          onTap: () => context.go('/cinemas'),
+          onTap:()=> context.go('/cinemas',
         ),
+        ),
+
         const SizedBox(width: 12.0),
+
         _CategoryIcon(
-            icon: Icons.people_outline,
-            label: 'Community',
-            onTap: () => context.go('/community'),
-          ),
+          icon: Icons.people_outline,
+          label: 'Community',
+          onTap: () => context.go('/community'),
+        ),
         const SizedBox(width: 12.0),
         _CategoryIcon(
           icon: Icons.movie_creation_outlined,
@@ -406,17 +371,17 @@ class _HomePageState extends State<HomePage> {
           onTap: () => context.go('/movies'),
         ),
         const SizedBox(width: 12.0),
-        _CategoryIcon(
+        const _CategoryIcon(
           icon: Icons.fastfood_outlined,
           label: 'm.food',
-          onTap: () => context.go('/food'),
+          onTap: null,
         ),
         const SizedBox(width: 12.0),
-        const _CategoryIcon(
-            icon: Icons.event_seat_outlined,
-            label: 'Private Booking',
-            onTap: null,
-          ),
+        // const _CategoryIcon(
+        //   icon: Icons.event_seat_outlined,
+        //   label: 'Private Booking',
+        //   onTap: null,
+        // ),
       ],
     );
   }
@@ -452,7 +417,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
+  
   Widget _buildFooter() {
     return Container(
       width: double.infinity,
@@ -470,7 +435,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 24.0),
-
+          
           Wrap(
             spacing: 40.0,
             runSpacing: 24.0,
@@ -478,44 +443,23 @@ class _HomePageState extends State<HomePage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Profile',
-                    style: TextStyle(color: AppColors.textWhite, fontSize: 16),
-                  ),
+                  Text('Profile', style: TextStyle(color: AppColors.textWhite, fontSize: 16)),
                   SizedBox(height: 12.0),
-                  Text(
-                    'Careers',
-                    style: TextStyle(color: AppColors.textWhite, fontSize: 16),
-                  ),
+                  Text('Careers', style: TextStyle(color: AppColors.textWhite, fontSize: 16)),
                   SizedBox(height: 12.0),
-                  Text(
-                    'Contact Us',
-                    style: TextStyle(color: AppColors.textWhite, fontSize: 16),
-                  ),
+                  Text('Contact Us', style: TextStyle(color: AppColors.textWhite, fontSize: 16)),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Follow Us',
-                    style: TextStyle(color: AppColors.textWhite, fontSize: 16),
-                  ),
+                  Text('Follow Us', style: TextStyle(color: AppColors.textWhite, fontSize: 16)),
                   SizedBox(height: 12.0),
-                  Text(
-                    'Facebook',
-                    style: TextStyle(color: AppColors.textGrey, fontSize: 14),
-                  ),
+                  Text('Facebook', style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
                   SizedBox(height: 8.0),
-                  Text(
-                    'Instagram',
-                    style: TextStyle(color: AppColors.textGrey, fontSize: 14),
-                  ),
+                  Text('Instagram', style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
                   SizedBox(height: 8.0),
-                  Text(
-                    'X (Twitter)',
-                    style: TextStyle(color: AppColors.textGrey, fontSize: 14),
-                  ),
+                  Text('X (Twitter)', style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
                 ],
               ),
             ],
@@ -531,6 +475,21 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  List<MovieModel> _filterMovies(List<MovieModel> movies) {
+    if (_searchQuery.isEmpty) {
+      return movies;
+    }
+
+    final query = _searchQuery.toLowerCase();
+    return movies
+        .where(
+          (movie) =>
+              movie.title.toLowerCase().contains(query) ||
+              movie.overview.toLowerCase().contains(query),
+        )
+        .toList();
+  }
 }
 
 // --- WIDGET IKON KATEGORI ---
@@ -539,7 +498,11 @@ class _CategoryIcon extends StatefulWidget {
   final String label;
   final VoidCallback? onTap;
 
-  const _CategoryIcon({required this.icon, required this.label, this.onTap});
+  const _CategoryIcon({
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
 
   @override
   State<_CategoryIcon> createState() => _CategoryIconState();
@@ -551,9 +514,7 @@ class _CategoryIconState extends State<_CategoryIcon> {
   @override
   Widget build(BuildContext context) {
     final Color iconColor = _isHovered ? AppColors.darkGrey : AppColors.gold;
-    final Color containerColor = _isHovered
-        ? AppColors.gold
-        : AppColors.darkGrey;
+    final Color containerColor = _isHovered ? AppColors.gold : AppColors.darkGrey;
     final Color textColor = _isHovered ? AppColors.gold : AppColors.textGrey;
 
     return Material(
@@ -597,7 +558,7 @@ class _HoverableMovieList extends StatefulWidget {
   final List<MovieModel> movies;
   final bool isMobile;
   final void Function(MovieModel movie) onBuyTicket;
-
+  
   const _HoverableMovieList({
     required this.movies,
     required this.isMobile,
@@ -610,8 +571,7 @@ class _HoverableMovieList extends StatefulWidget {
 
 class _HoverableMovieListState extends State<_HoverableMovieList> {
   final ScrollController _scrollController = ScrollController();
-  final CarouselSliderController _mobileCarouselController =
-      CarouselSliderController();
+  final CarouselSliderController _mobileCarouselController = CarouselSliderController();
 
   bool _isHovered = false;
   bool _canScrollLeft = false;
@@ -635,19 +595,13 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
 
   void _updateScrollButtons() {
     if (!mounted) return;
-
+    
     if (!widget.isMobile) {
       bool hasOverflow = widget.movies.length > 4;
       setState(() {
-        _canScrollLeft =
-            hasOverflow &&
-            _scrollController.hasClients &&
-            _scrollController.offset > 0;
-        _canScrollRight =
-            hasOverflow &&
-            _scrollController.hasClients &&
-            _scrollController.offset <
-                _scrollController.position.maxScrollExtent;
+        _canScrollLeft = hasOverflow && _scrollController.hasClients && _scrollController.offset > 0;
+        _canScrollRight = hasOverflow && _scrollController.hasClients && 
+                          _scrollController.offset < _scrollController.position.maxScrollExtent;
       });
     }
   }
@@ -675,7 +629,7 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
   Widget build(BuildContext context) {
     if (widget.isMobile) {
       return SizedBox(
-        height: 290,
+        height: 400,
         child: CarouselSlider.builder(
           carouselController: _mobileCarouselController,
           itemCount: widget.movies.length,
@@ -685,12 +639,13 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
               child: _NowPlayingMovieItem(
                 movie: widget.movies[index],
                 index: index,
+                isMobile: widget.isMobile,
                 onBuyTicket: () => widget.onBuyTicket(widget.movies[index]),
               ),
             );
           },
           options: CarouselOptions(
-            height: 290,
+            height: 400,
             autoPlay: false,
             enlargeCenterPage: true,
             viewportFraction: 0.65,
@@ -701,8 +656,7 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
       final double itemWidth = 200.0;
       final double itemSpacing = 16.0;
       final int visibleItems = 4;
-      final double totalVisibleWidth =
-          (itemWidth * visibleItems) + (itemSpacing * (visibleItems - 1));
+      final double totalVisibleWidth = (itemWidth * visibleItems) + (itemSpacing * (visibleItems - 1));
 
       return Center(
         child: MouseRegion(
@@ -720,9 +674,7 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
                   duration: const Duration(milliseconds: 200),
                   child: _HoverArrowButton(
                     icon: Icons.arrow_back_ios,
-                    onPressed: _isHovered && _canScrollLeft
-                        ? _scrollLeft
-                        : null,
+                    onPressed: _isHovered && _canScrollLeft ? _scrollLeft : null,
                   ),
                 ),
 
@@ -740,17 +692,15 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: EdgeInsets.only(
-                            right: (index == widget.movies.length - 1)
-                                ? 0
-                                : itemSpacing,
+                            right: (index == widget.movies.length - 1) ? 0 : itemSpacing,
                           ),
                           child: SizedBox(
                             width: itemWidth,
                             child: _NowPlayingMovieItem(
                               movie: widget.movies[index],
                               index: index,
-                              onBuyTicket: () =>
-                                  widget.onBuyTicket(widget.movies[index]),
+                              isMobile: widget.isMobile,
+                              onBuyTicket: () => widget.onBuyTicket(widget.movies[index]),
                             ),
                           ),
                         );
@@ -766,9 +716,7 @@ class _HoverableMovieListState extends State<_HoverableMovieList> {
                   duration: const Duration(milliseconds: 200),
                   child: _HoverArrowButton(
                     icon: Icons.arrow_forward_ios,
-                    onPressed: _isHovered && _canScrollRight
-                        ? _scrollRight
-                        : null,
+                    onPressed: _isHovered && _canScrollRight ? _scrollRight : null,
                   ),
                 ),
               ],
@@ -785,7 +733,10 @@ class _HoverArrowButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onPressed;
 
-  const _HoverArrowButton({required this.icon, required this.onPressed});
+  const _HoverArrowButton({
+    required this.icon,
+    required this.onPressed,
+  });
 
   @override
   State<_HoverArrowButton> createState() => _HoverArrowButtonState();
@@ -804,19 +755,17 @@ class _HoverArrowButtonState extends State<_HoverArrowButton> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isActive
-              ? (_isHovered ? AppColors.gold : AppColors.gold.withOpacity(0.8))
-              : AppColors.gold.withOpacity(0.0),
+          color: isActive 
+            ? (_isHovered ? AppColors.gold : AppColors.gold.withOpacity(0.8))
+            : AppColors.gold.withOpacity(0.0),
           shape: BoxShape.circle,
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
+          boxShadow: isActive ? [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ] : [],
         ),
         child: IconButton(
           icon: Icon(widget.icon, color: AppColors.darkBackground),
@@ -834,11 +783,13 @@ class _HoverArrowButtonState extends State<_HoverArrowButton> {
 class _NowPlayingMovieItem extends StatefulWidget {
   final MovieModel movie;
   final int index;
+  final bool isMobile;
   final VoidCallback? onBuyTicket;
-
+  
   const _NowPlayingMovieItem({
     required this.movie,
     required this.index,
+    required this.isMobile,
     this.onBuyTicket,
   });
 
@@ -885,9 +836,9 @@ class _NowPlayingMovieItemState extends State<_NowPlayingMovieItem> {
       setState(() {
         _isLoadingTrailer = false;
       });
-
+      
       if (!mounted) return;
-
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal memuat trailer: $e'),
@@ -900,151 +851,195 @@ class _NowPlayingMovieItemState extends State<_NowPlayingMovieItem> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => !widget.isMobile ? setState(() => _isHovered = true) : null,
+      onExit: (_) => !widget.isMobile ? setState(() => _isHovered = false) : null,
       child: GestureDetector(
         onTap: () {
           print('Navigasi ke detail film ${widget.movie.title}');
         },
         child: Container(
-          child: Stack(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Positioned.fill(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: CachedNetworkImage(
-                    imageUrl: widget.movie.getFullPosterUrl(),
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) =>
-                        Container(color: AppColors.darkGrey),
-                    errorWidget: (context, url, error) => Container(
-                      color: AppColors.darkGrey,
-                      child: const Icon(Icons.error, color: AppColors.textGrey),
-                    ),
-                  ),
-                ),
-              ),
-
-              if (_isHovered)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: Colors.black.withOpacity(0.6),
-                    ),
-                  ),
-                ),
-
-              if (_isHovered)
-                Center(
-                  child: _isLoadingTrailer
-                      ? const CircularProgressIndicator(color: AppColors.gold)
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: _showTrailer,
-                              icon: const Icon(Icons.play_arrow, size: 28),
-                              label: const Text(
-                                'Tonton Trailer',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.gold,
-                                foregroundColor: AppColors.darkBackground,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            OutlinedButton.icon(
-                              onPressed: widget.onBuyTicket,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.gold,
-                                side: const BorderSide(
-                                  color: AppColors.gold,
-                                  width: 2,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                backgroundColor: Colors.black.withOpacity(0.4),
-                              ),
-                              icon: const Icon(
-                                Icons.confirmation_number_outlined,
-                              ),
-                              label: const Text(
-                                'Beli Tiket',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: CachedNetworkImage(
+                          imageUrl: widget.movie.getFullPosterUrl(),
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            color: AppColors.darkGrey,
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            color: AppColors.darkGrey,
+                            child: const Icon(Icons.error, color: AppColors.textGrey),
+                          ),
                         ),
-                ),
-
-              Positioned(
-                top: 12,
-                left: 0,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 6.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.gold,
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Advance ticket sales',
-                    style: TextStyle(
-                      color: AppColors.darkBackground,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${widget.index + 1}',
-                      style: const TextStyle(
-                        color: AppColors.textWhite,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
+                    
+                    if (!widget.isMobile && _isHovered)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.black.withOpacity(0.6),
+                          ),
+                        ),
+                      ),
+                    
+                    if (!widget.isMobile && _isHovered)
+                      Center(
+                        child: _isLoadingTrailer
+                            ? const CircularProgressIndicator(
+                                color: AppColors.gold,
+                              )
+                            : Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: _showTrailer,
+                                    icon: const Icon(Icons.play_arrow, size: 28),
+                                    label: const Text(
+                                      'Tonton Trailer',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.gold,
+                                      foregroundColor: AppColors.darkBackground,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  OutlinedButton.icon(
+                                    onPressed: widget.onBuyTicket,
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: AppColors.gold,
+                                      side: const BorderSide(color: AppColors.gold, width: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      backgroundColor: Colors.black.withOpacity(0.4),
+                                    ),
+                                    icon: const Icon(Icons.confirmation_number_outlined),
+                                    label: const Text(
+                                      'Beli Tiket',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    
+                    Positioned(
+                      top: 12,
+                      left: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                        decoration: BoxDecoration(
+                          color: AppColors.gold,
+                          borderRadius: const BorderRadius.only(
+                            topRight: Radius.circular(8),
+                            bottomRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Advance ticket sales',
+                          style: TextStyle(
+                            color: AppColors.darkBackground,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '${widget.index + 1}',
+                            style: const TextStyle(
+                              color: AppColors.textWhite,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              if (widget.isMobile)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _showTrailer,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.gold,
+                          foregroundColor: AppColors.darkBackground,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.play_arrow, size: 18),
+                        label: const Text(
+                          'Trailer',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: widget.onBuyTicket,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.gold,
+                          side: const BorderSide(color: AppColors.gold),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.confirmation_number_outlined, size: 18),
+                        label: const Text(
+                          'Beli Tiket',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
@@ -1056,8 +1051,9 @@ class _NowPlayingMovieItemState extends State<_NowPlayingMovieItem> {
 // --- WIDGET UPCOMING MOVIE ITEM (DENGAN FITUR TRAILER) ---
 class _UpcomingMovieItem extends StatefulWidget {
   final MovieModel movie;
+  final bool isMobile;
   final VoidCallback? onBuyTicket;
-  const _UpcomingMovieItem({required this.movie, this.onBuyTicket});
+  const _UpcomingMovieItem({required this.movie, required this.isMobile, this.onBuyTicket});
 
   @override
   State<_UpcomingMovieItem> createState() => _UpcomingMovieItemState();
@@ -1115,8 +1111,8 @@ class _UpcomingMovieItemState extends State<_UpcomingMovieItem> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => !widget.isMobile ? setState(() => _isHovered = true) : null,
+      onExit: (_) => !widget.isMobile ? setState(() => _isHovered = false) : null,
       child: GestureDetector(
         onTap: () {
           print('Navigasi ke film ${widget.movie.title}');
@@ -1124,16 +1120,16 @@ class _UpcomingMovieItemState extends State<_UpcomingMovieItem> {
         child: Container(
           width: 140,
           margin: const EdgeInsets.only(right: 12.0),
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Stack(
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(10),
                     child: CachedNetworkImage(
                       imageUrl: widget.movie.getFullPosterUrl(),
-                      fit: BoxFit.cover,
+                      fit:BoxFit.cover,
                       height: 180,
                       width: 140,
                       placeholder: (context, url) => Container(
@@ -1145,113 +1141,144 @@ class _UpcomingMovieItemState extends State<_UpcomingMovieItem> {
                         height: 180,
                         width: 140,
                         color: AppColors.darkGrey,
-                        child: const Icon(
-                          Icons.error,
-                          color: AppColors.textGrey,
-                        ),
+                        child: const Icon(Icons.error, color: AppColors.textGrey),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    widget.movie.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textWhite,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                  
+                  // Overlay dan tombol play saat hover
+                  if (!widget.isMobile && _isHovered)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: 180,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.black.withOpacity(0.7),
+                        ),
+                        child: Center(
+                          child: _isLoadingTrailer
+                              ? const CircularProgressIndicator(
+                                  color: AppColors.gold,
+                                )
+                              : Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      width: 140,
+                                      child: ElevatedButton.icon(
+                                        onPressed: _showTrailer,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.gold,
+                                          foregroundColor: AppColors.darkBackground,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                        ),
+                                        icon: const Icon(Icons.play_arrow, size: 18),
+                                        label: const Text(
+                                          'Trailer',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      width: 140,
+                                      child: OutlinedButton.icon(
+                                        onPressed: widget.onBuyTicket,
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: AppColors.gold,
+                                          side: const BorderSide(color: AppColors.gold, width: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(30),
+                                          ),
+                                          backgroundColor: Colors.black.withOpacity(0.4),
+                                        ),
+                                        icon: const Icon(
+                                          Icons.confirmation_number_outlined,
+                                          size: 18,
+                                        ),
+                                        label: const Text(
+                                          'Beli Tiket',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               ),
-
-              // Overlay dan tombol play saat hover
-              if (_isHovered)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 180,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.black.withOpacity(0.7),
-                    ),
-                    child: Center(
-                      child: _isLoadingTrailer
-                          ? const CircularProgressIndicator(
-                              color: AppColors.gold,
-                            )
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  width: 140,
-                                  child: ElevatedButton.icon(
-                                    onPressed: _showTrailer,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.gold,
-                                      foregroundColor: AppColors.darkBackground,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                    ),
-                                    icon: const Icon(
-                                      Icons.play_arrow,
-                                      size: 18,
-                                    ),
-                                    label: const Text(
-                                      'Trailer',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                SizedBox(
-                                  width: 140,
-                                  child: OutlinedButton.icon(
-                                    onPressed: widget.onBuyTicket,
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.gold,
-                                      side: const BorderSide(
-                                        color: AppColors.gold,
-                                        width: 2,
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 10,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      backgroundColor: Colors.black.withOpacity(
-                                        0.4,
-                                      ),
-                                    ),
-                                    icon: const Icon(
-                                      Icons.confirmation_number_outlined,
-                                      size: 18,
-                                    ),
-                                    label: const Text(
-                                      'Beli Tiket',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
+              const SizedBox(height: 8.0),
+              Text(
+                widget.movie.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textWhite,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (widget.isMobile)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _showTrailer,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.gold,
+                          foregroundColor: AppColors.darkBackground,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.play_arrow, size: 14),
+                        label: const Text(
+                          'Trailer',
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: widget.onBuyTicket,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.gold,
+                          side: const BorderSide(color: AppColors.gold),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.confirmation_number_outlined, size: 14),
+                        label: const Text(
+                          'Beli Tiket',
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
             ],
@@ -1261,79 +1288,3 @@ class _UpcomingMovieItemState extends State<_UpcomingMovieItem> {
     );
   }
 }
-// --- TEMPEL DI BAGIAN PALING BAWAH FILE home_page.dart ---
-
-class _CategoryButton extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _CategoryButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  State<_CategoryButton> createState() => _CategoryButtonState();
-}
-
-class _CategoryButtonState extends State<_CategoryButton> {
-  bool _isHovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovering = true),
-        onExit: (_) => setState(() => _isHovering = false),
-        child: Column(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                // EFEK HOVER: Warna berubah jadi Emas jika di-hover
-                color: _isHovering ? AppColors.gold : AppColors.darkGrey,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: _isHovering
-                      ? AppColors.gold
-                      : AppColors.gold.withOpacity(0.3),
-                ),
-                boxShadow: [
-                  if (_isHovering)
-                    BoxShadow(
-                      color: AppColors.gold.withOpacity(0.4),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                ],
-              ),
-              child: Icon(
-                widget.icon,
-                // EFEK HOVER: Ikon berubah jadi Hitam jika di-hover
-                color: _isHovering ? Colors.black : AppColors.gold,
-                size: 28,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              widget.label,
-              style: TextStyle(
-                // EFEK HOVER: Teks berubah jadi Emas jika di-hover
-                color: _isHovering ? AppColors.gold : AppColors.textGrey,
-                fontSize: 12,
-                fontWeight: _isHovering ? FontWeight.bold : FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
-

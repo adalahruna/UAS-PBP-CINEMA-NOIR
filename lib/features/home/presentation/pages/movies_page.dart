@@ -9,12 +9,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-enum SortOption {
-  releaseDate,
-  alphabeticalAZ,
-  alphabeticalZA,
-}
-
 class MoviesPage extends StatefulWidget {
   final bool showNowPlaying;
 
@@ -30,13 +24,11 @@ class MoviesPage extends StatefulWidget {
 class _MoviesPageState extends State<MoviesPage> {
   String _searchQuery = '';
   late bool _showNowPlaying;
-  SortOption? _sortOption;
 
   @override
   void initState() {
     super.initState();
     _showNowPlaying = widget.showNowPlaying;
-    _sortOption = SortOption.releaseDate;
   }
 
   @override
@@ -104,7 +96,7 @@ class _MoviesPageState extends State<MoviesPage> {
                   final movies = _showNowPlaying
                       ? state.nowPlayingMovies
                       : state.upcomingMovies;
-                  final filteredMovies = _filterAndSortMovies(movies);
+                  final filteredMovies = _filterMovies(movies);
                   final sectionTitle =
                       _showNowPlaying ? 'Sedang Tayang' : 'Akan Tayang';
 
@@ -126,8 +118,6 @@ class _MoviesPageState extends State<MoviesPage> {
                         _buildCategoryToggle(),
                         const SizedBox(height: 20),
                         _buildSearchField(context),
-                        const SizedBox(height: 16),
-                        _buildSortDropdown(),
                         const SizedBox(height: 24),
                         Text(
                           sectionTitle,
@@ -167,87 +157,6 @@ class _MoviesPageState extends State<MoviesPage> {
         ),
       ),
     );
-  }
-
-  Widget _buildSortDropdown() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        const Text(
-          'Urutkan:',
-          style: TextStyle(color: AppColors.textGrey, fontSize: 14),
-        ),
-        const SizedBox(width: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
-          decoration: BoxDecoration(
-            color: AppColors.darkGrey,
-            borderRadius: BorderRadius.circular(20.0),
-            border: Border.all(color: AppColors.gold, width: 1),
-          ),
-          child: DropdownButton<SortOption>(
-            value: _sortOption,
-            hint: const Text('Pilih Opsi', style: TextStyle(color: AppColors.textGrey)),
-            dropdownColor: AppColors.darkGrey,
-            underline: const SizedBox(),
-            icon: const Icon(Icons.arrow_drop_down, color: AppColors.gold),
-            onChanged: (SortOption? newValue) {
-              setState(() {
-                _sortOption = newValue;
-              });
-            },
-            items: const [
-              DropdownMenuItem(
-                value: SortOption.releaseDate,
-                child: Text('Tanggal Tayang: Terbaru', style: TextStyle(color: AppColors.textWhite)),
-              ),
-              DropdownMenuItem(
-                value: SortOption.alphabeticalAZ,
-                child: Text('Abjad A-Z', style: TextStyle(color: AppColors.textWhite)),
-              ),
-              DropdownMenuItem(
-                value: SortOption.alphabeticalZA,
-                child: Text('Abjad Z-A', style: TextStyle(color: AppColors.textWhite)),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  List<MovieModel> _filterAndSortMovies(List<MovieModel> movies) {
-    List<MovieModel> filteredMovies;
-
-    // Filtering logic
-    if (_searchQuery.isEmpty) {
-      filteredMovies = List<MovieModel>.from(movies);
-    } else {
-      filteredMovies = movies
-          .where((movie) => movie.title.toLowerCase().contains(_searchQuery))
-          .toList();
-    }
-
-    // Sorting logic
-    if (_sortOption != null) {
-      filteredMovies.sort((a, b) {
-        switch (_sortOption) {
-          case SortOption.alphabeticalAZ:
-            return a.title.compareTo(b.title);
-          case SortOption.alphabeticalZA:
-            return b.title.compareTo(a.title);
-          case SortOption.releaseDate:
-            if (a.releaseDate == null && b.releaseDate == null) return 0;
-            if (a.releaseDate == null) return 1;
-            if (b.releaseDate == null) return -1;
-            return b.releaseDate!.compareTo(a.releaseDate!);
-          default:
-            return 0;
-        }
-      });
-    }
-
-    return filteredMovies;
   }
 
   Widget _buildCategoryToggle() {
@@ -315,6 +224,16 @@ class _MoviesPageState extends State<MoviesPage> {
       ),
     );
   }
+
+  List<MovieModel> _filterMovies(List<MovieModel> movies) {
+    if (_searchQuery.isEmpty) {
+      return movies;
+    }
+
+    return movies
+        .where((movie) => movie.title.toLowerCase().contains(_searchQuery))
+        .toList();
+  }
 }
 
 class _MovieGrid extends StatelessWidget {
@@ -336,7 +255,7 @@ class _MovieGrid extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
-            childAspectRatio: 0.6,
+            childAspectRatio: crossAxisCount <= 2 ? 0.45 : 0.6,
           ),
           itemBuilder: (context, index) {
             return _MovieCard(movie: movies[index]);
@@ -472,9 +391,11 @@ class _MovieCardBodyState extends State<_MovieCardBody> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => !isMobile ? setState(() => _isHovered = true) : null,
+      onExit: (_) => !isMobile ? setState(() => _isHovered = false) : null,
       child: GestureDetector(
         onTap: _showTrailer,
         child: Container(
@@ -501,7 +422,7 @@ class _MovieCardBodyState extends State<_MovieCardBody> {
                         ),
                       ),
                     ),
-                    if (_isHovered || _isLoadingTrailer)
+                    if (!isMobile && (_isHovered || _isLoadingTrailer))
                       Positioned.fill(
                         child: Container(
                           decoration: BoxDecoration(
@@ -605,6 +526,51 @@ class _MovieCardBodyState extends State<_MovieCardBody> {
                   ],
                 ),
               ),
+              if (isMobile)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: _showTrailer,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.gold,
+                          foregroundColor: AppColors.darkBackground,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.play_arrow, size: 18),
+                        label: const Text(
+                          'Trailer',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: () => context.push(
+                          '/movies/${widget.movie.id}/ticket',
+                          extra: widget.movie,
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.gold,
+                          side: const BorderSide(color: AppColors.gold),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        icon: const Icon(Icons.confirmation_number_outlined, size: 18),
+                        label: const Text(
+                          'Beli Tiket',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),
