@@ -1,6 +1,5 @@
 // File: lib/features/home/presentation/pages/home_page.dart
 
-import 'package:cinema_noir/features/auth/presentation/cubit/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -13,6 +12,7 @@ import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
 import 'package:cinema_noir/features/home/presentation/widgets/food_promo_section.dart';
+import 'package:cinema_noir/features/home/presentation/widgets/home_search_bar.dart';
 import 'package:go_router/go_router.dart';
 
 
@@ -25,15 +25,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -64,8 +55,6 @@ class _HomePageState extends State<HomePage> {
               if (state is MovieLoaded) {
                 final double screenWidth = MediaQuery.of(context).size.width;
                 final bool isMobile = screenWidth < 768;
-                final filteredNowPlaying = _filterMovies(state.nowPlayingMovies);
-                final filteredUpcoming = _filterMovies(state.upcomingMovies);
 
                 return SingleChildScrollView(
                   child: Column(
@@ -73,7 +62,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       _buildCustomHeader(context),
                       const SizedBox(height: 24.0),
-                      _buildSearchBar(context),
+                      _buildSearchBar(context, state.nowPlayingMovies + state.upcomingMovies),
                       const SizedBox(height: 24.0),
                       _buildIconButtons(context),
                       const SizedBox(height: 24.0),
@@ -89,11 +78,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 16.0),
                       
-                      if (filteredNowPlaying.isEmpty)
+                      if (state.nowPlayingMovies.isEmpty)
                         _buildEmptyMovieMessage('Tidak ada film yang sesuai pencarian.')
                       else
                         _buildCenteredSwipeableMovieList(
-                          movies: filteredNowPlaying,
+                          movies: state.nowPlayingMovies,
                           isMobile: isMobile,
                           onBuyTicket: (movie) => context.push(
                             '/movies/${movie.id}/ticket',
@@ -110,11 +99,11 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 16.0),
 
-                      if (filteredUpcoming.isEmpty)
+                      if (state.upcomingMovies.isEmpty)
                         _buildEmptyMovieMessage('Tidak ada film yang sesuai pencarian.')
                       else
                         _buildHorizontalMovieList(
-                          movies: filteredUpcoming,
+                          movies: state.upcomingMovies,
                           isMobile: isMobile,
                           onBuyTicket: (movie) => context.push(
                             '/movies/${movie.id}/ticket',
@@ -292,12 +281,7 @@ class _HomePageState extends State<HomePage> {
                 icon: const Icon(Icons.person_outline, color: AppColors.gold),
                 tooltip: 'Profile',
                 onPressed: () {
-                  final authState = context.read<AuthCubit>().state;
-                  if (authState is Authenticated) {
-                    context.go('/profile');
-                  } else {
-                    context.go('/login');
-                  }
+                  print('Profile icon pressed!');
                 },
               ),
             ],
@@ -307,42 +291,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: (screenWidth * 0.85).clamp(0, 600),
-        ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value.trim();
-            });
-          },
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(
-              vertical: 12.0, 
-              horizontal: 16.0,
-            ),
-            hintText: 'Cari film',
-            hintStyle: const TextStyle(color: AppColors.textGrey),
-            prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
-            filled: true,
-            fillColor: AppColors.darkGrey,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30.0),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(30.0),
-              borderSide: const BorderSide(color: AppColors.gold, width: 2),
-            ),
-          ),
-        ),
-      ),
+  Widget _buildSearchBar(BuildContext context, List<MovieModel> movies) {
+    return HomeSearchBar(
+      movies: movies,
+      onSearchChanged: (_) {},
     );
   }
 
@@ -353,12 +305,9 @@ class _HomePageState extends State<HomePage> {
          _CategoryIcon(
           icon: Icons.theaters_outlined,
           label: 'Cinemas',
-          onTap:()=> context.go('/cinemas',
+          onTap: () => context.go('/cinemas'),
         ),
-        ),
-
         const SizedBox(width: 12.0),
-
         _CategoryIcon(
           icon: Icons.people_outline,
           label: 'Community',
@@ -476,20 +425,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<MovieModel> _filterMovies(List<MovieModel> movies) {
-    if (_searchQuery.isEmpty) {
-      return movies;
-    }
-
-    final query = _searchQuery.toLowerCase();
-    return movies
-        .where(
-          (movie) =>
-              movie.title.toLowerCase().contains(query) ||
-              movie.overview.toLowerCase().contains(query),
-        )
-        .toList();
-  }
 }
 
 // --- WIDGET IKON KATEGORI ---
