@@ -23,7 +23,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final _formKey = GlobalKey<FormState>();
 
   final _nameCtrl = TextEditingController();
-  final _provCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
 
   Uint8List? _newImageBytes;
@@ -41,7 +40,6 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _provCtrl.dispose();
     _cityCtrl.dispose();
     super.dispose();
   }
@@ -64,7 +62,6 @@ class _ProfilePageState extends State<ProfilePage> {
         if (mounted) {
           setState(() {
             _nameCtrl.text = data['fullName'] ?? _nameCtrl.text;
-            _provCtrl.text = data['province'] ?? '';
             _cityCtrl.text = data['city'] ?? '';
             if (data['photoUrl'] != null && data['photoUrl'].isNotEmpty) {
               _currentPhotoUrl = data['photoUrl'];
@@ -111,7 +108,7 @@ class _ProfilePageState extends State<ProfilePage> {
     context.read<AuthCubit>().updateProfile(
           uid: user!.uid,
           fullName: _nameCtrl.text.trim(),
-          province: _provCtrl.text.trim(),
+          province: 'Jawa Timur', // Default province
           city: _cityCtrl.text.trim(),
           imageBytes: _newImageBytes,
           imageExtension: _imageExtension,
@@ -196,138 +193,196 @@ class _ProfilePageState extends State<ProfilePage> {
               imageProvider = NetworkImage(_currentPhotoUrl!);
             }
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // --- Avatar Section ---
-                    Center(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          CircleAvatar(
-                            radius: 70,
-                            backgroundColor: AppColors.darkGrey,
-                            backgroundImage: imageProvider,
-                            child: (imageProvider == null)
-                                ? const Icon(Icons.person, size: 60, color: AppColors.textGrey)
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 4,
-                            right: 4,
-                            child: Material(
-                              color: AppColors.gold,
-                              shape: const CircleBorder(),
-                              elevation: 2,
-                              child: InkWell(
-                                onTap: isSaving ? null : _pickImage,
-                                customBorder: const CircleBorder(),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Icon(Icons.edit, color: AppColors.darkBackground, size: 20),
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final screenWidth = constraints.maxWidth;
+                final isMobile = screenWidth < 768;
+                
+                return Center(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 20 : 32,
+                      vertical: isMobile ? 16 : 24,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // --- Avatar Section ---
+                            Center(
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  CircleAvatar(
+                                    radius: isMobile ? 60 : 70,
+                                    backgroundColor: AppColors.darkGrey,
+                                    backgroundImage: imageProvider,
+                                    child: (imageProvider == null)
+                                        ? Icon(Icons.person, size: isMobile ? 50 : 60, color: AppColors.textGrey)
+                                        : null,
+                                  ),
+                                  Positioned(
+                                    bottom: 4,
+                                    right: 4,
+                                    child: Material(
+                                      color: AppColors.gold,
+                                      shape: const CircleBorder(),
+                                      elevation: 2,
+                                      child: InkWell(
+                                        onTap: isSaving ? null : _pickImage,
+                                        customBorder: const CircleBorder(),
+                                        child: Padding(
+                                          padding: EdgeInsets.all(isMobile ? 6 : 8),
+                                          child: Icon(
+                                            Icons.edit,
+                                            color: AppColors.darkBackground,
+                                            size: isMobile ? 18 : 20,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: isMobile ? 12 : 16),
+                            Center(
+                              child: Text(
+                                _nameCtrl.text.isNotEmpty ? _nameCtrl.text : "No Name",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppColors.textWhite,
+                                  fontSize: isMobile ? 20 : 24,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Center(
-                      child: Text(
-                        _nameCtrl.text.isNotEmpty ? _nameCtrl.text : "No Name",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: AppColors.textWhite, fontSize: 24, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Center(
-                      child: Text(
-                        user?.email ?? '',
-                        style: const TextStyle(color: AppColors.textGrey, fontSize: 16),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                            const SizedBox(height: 4),
+                            Center(
+                              child: Text(
+                                user?.email ?? '',
+                                style: TextStyle(
+                                  color: AppColors.textGrey,
+                                  fontSize: isMobile ? 14 : 16,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: isMobile ? 24 : 32),
 
-                    // --- Form Section ---
-                    _buildSectionHeader('User Information'),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _nameCtrl,
-                      decoration: _buildInputDecoration(label: 'Full Name', icon: Icons.person_outline),
-                      style: const TextStyle(color: AppColors.textWhite),
-                      validator: (v) => v!.isEmpty ? 'Name cannot be empty' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      initialValue: user?.email,
-                      // readOnly: true,  
-                      style: const TextStyle(color: AppColors.textGrey),
-                      decoration: _buildInputDecoration(label: 'Email (Read-only)', icon: Icons.email_outlined).copyWith(
-                        fillColor: AppColors.darkGrey.withOpacity(0.5),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildSectionHeader('Location'),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: _provCtrl,
-                            style: const TextStyle(color: AppColors.textWhite),
-                            decoration: _buildInputDecoration(label: 'Province', icon: Icons.location_city_outlined),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _cityCtrl,
-                            style: const TextStyle(color: AppColors.textWhite),
-                            decoration: _buildInputDecoration(label: 'City', icon: Icons.map_outlined),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
+                            // --- Form Container ---
+                            Container(
+                              padding: EdgeInsets.all(isMobile ? 20 : 24),
+                              decoration: BoxDecoration(
+                                color: AppColors.darkGrey.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: AppColors.gold.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildSectionHeader('User Information'),
+                                  SizedBox(height: isMobile ? 12 : 16),
+                                  TextFormField(
+                                    controller: _nameCtrl,
+                                    decoration: _buildInputDecoration(
+                                      label: 'Full Name',
+                                      icon: Icons.person_outline,
+                                    ),
+                                    style: const TextStyle(color: AppColors.textWhite),
+                                    validator: (v) => v!.isEmpty ? 'Name cannot be empty' : null,
+                                  ),
+                                  SizedBox(height: isMobile ? 12 : 16),
+                                  TextFormField(
+                                    initialValue: user?.email,
+                                    readOnly: true,
+                                    style: const TextStyle(color: AppColors.textGrey),
+                                    decoration: _buildInputDecoration(
+                                      label: 'Email (Read-only)',
+                                      icon: Icons.email_outlined,
+                                    ).copyWith(
+                                      fillColor: AppColors.darkGrey.withOpacity(0.5),
+                                    ),
+                                  ),
+                                  SizedBox(height: isMobile ? 16 : 20),
+                                  _buildSectionHeader('Location'),
+                                  SizedBox(height: isMobile ? 12 : 16),
+                                  TextFormField(
+                                    controller: _cityCtrl,
+                                    style: const TextStyle(color: AppColors.textWhite),
+                                    decoration: _buildInputDecoration(
+                                      label: 'City',
+                                      icon: Icons.location_city,
+                                    ),
+                                    validator: (v) => v!.isEmpty ? 'City cannot be empty' : null,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: isMobile ? 24 : 32),
 
-                    // --- Save Button ---
-                    ElevatedButton(
-                      onPressed: isSaving ? null : _save,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.gold,
-                        foregroundColor: AppColors.darkBackground,
-                        minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            // --- Save Button ---
+                            ElevatedButton(
+                              onPressed: isSaving ? null : _save,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.gold,
+                                foregroundColor: AppColors.darkBackground,
+                                minimumSize: Size(double.infinity, isMobile ? 48 : 54),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                elevation: 3,
+                                textStyle: TextStyle(
+                                  fontSize: isMobile ? 15 : 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              child: isSaving
+                                  ? const SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 3,
+                                        color: AppColors.darkBackground,
+                                      ),
+                                    )
+                                  : const Text('SAVE CHANGES'),
+                            ),
+                            SizedBox(height: isMobile ? 16 : 20),
+                            
+                            // --- Logout Button ---
+                            OutlinedButton.icon(
+                              onPressed: isSaving ? null : _logout,
+                              icon: const Icon(Icons.logout, color: Colors.redAccent, size: 20),
+                              label: Text(
+                                'Logout',
+                                style: TextStyle(
+                                  color: Colors.redAccent,
+                                  fontSize: isMobile ? 15 : 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: Size(double.infinity, isMobile ? 48 : 54),
+                                side: const BorderSide(color: Colors.redAccent, width: 2),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: isMobile ? 16 : 24),
+                          ],
+                        ),
                       ),
-                      child: isSaving
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 3, color: AppColors.darkBackground),
-                            )
-                          : const Text('SAVE CHANGES'),
                     ),
-                    const SizedBox(height: 24),
-                    const Divider(color: AppColors.darkGrey),
-                    const SizedBox(height: 8),
-                    // --- Logout Button ---
-                    TextButton.icon(
-                      onPressed: isSaving ? null : _logout,
-                      icon: const Icon(Icons.logout, color: Colors.redAccent),
-                      label: const Text('Logout', style: TextStyle(color: Colors.redAccent, fontSize: 16)),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             );
           },
         ),
