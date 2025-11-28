@@ -1,3 +1,5 @@
+import 'package:cinema_noir/features/home/data/models/cast_member_model.dart';
+import 'package:cinema_noir/features/home/data/models/crew_member_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cinema_noir/core/api/tmdb_service.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
@@ -17,8 +19,13 @@ class MovieTicketPage extends StatefulWidget {
   State<MovieTicketPage> createState() => _MovieTicketPageState();
 }
 
-class _MovieTicketPageState extends State<MovieTicketPage> {
+class _MovieTicketPageState extends State<MovieTicketPage>
+    with SingleTickerProviderStateMixin {
   bool _isLoadingTrailer = false;
+  bool _isLoadingDetails = false;
+  List<CastMemberModel> _cast = [];
+  List<CrewMemberModel> _crew = [];
+  late final TabController _tabController;
 
   int _selectedDateIndex = 0;
   int _selectedCityIndex = 0;
@@ -54,10 +61,45 @@ class _MovieTicketPageState extends State<MovieTicketPage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _availableDates = List.generate(
       7,
       (index) => DateTime.now().add(Duration(days: index)),
     );
+    _loadMovieCredits();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadMovieCredits() async {
+    if (widget.movie == null) return;
+
+    setState(() {
+      _isLoadingDetails = true;
+    });
+
+    try {
+      final tmdbService = TmdbService();
+      final credits = await tmdbService.getMovieCredits(widget.movie!.id);
+      if (mounted) {
+        setState(() {
+          _cast = credits['cast'] as List<CastMemberModel>;
+          _crew = credits['crew'] as List<CrewMemberModel>;
+          _isLoadingDetails = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingDetails = false;
+        });
+      }
+      print('Error loading movie credits: $e');
+    }
   }
 
   DateTime get _selectedDate => _availableDates[_selectedDateIndex];
@@ -174,31 +216,35 @@ class _MovieTicketPageState extends State<MovieTicketPage> {
         ),
         centerTitle: true,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1A1A1A),
-              AppColors.darkBackground,
-            ],
-          ),
-        ),
-        child: movie == null
-            ? const Center(
-                child: Text(
-                  'Data film tidak tersedia.',
-                  style: TextStyle(color: AppColors.textWhite),
+      body: Stack(
+        children: [
+          if (movie != null)
+            Container(
+              height: MediaQuery.of(context).size.height * 0.5,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: CachedNetworkImageProvider(movie.getFullPosterUrl()),
+                  fit: BoxFit.cover,
                 ),
-              )
-            : SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
-                  left: 16,
-                  right: 16,
-                  bottom: 32,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      AppColors.darkBackground.withOpacity(1),
+                    ],
+                  ),
                 ),
+              ),
+            ),
+          Column(
+            children: [
+              SizedBox(height: MediaQuery.of(context).padding.top + kToolbarHeight),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -207,7 +253,7 @@ class _MovieTicketPageState extends State<MovieTicketPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Hero(
-                          tag: 'movie_poster_${movie.id}',
+                          tag: 'movie_poster_${movie!.id}',
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
@@ -308,7 +354,24 @@ class _MovieTicketPageState extends State<MovieTicketPage> {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    
+                    TabBar(
+                      controller: _tabController,
+                      labelColor: AppColors.gold,
+                      unselectedLabelColor: Colors.white70,
+                      indicatorColor: AppColors.gold,
+                      tabs: const [
+                        Tab(text: 'Jadwal'),
+                        Tab(text: 'Detail'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
                     // Schedule Section
                     _ScheduleSection(
                       selectedDateIndex: _selectedDateIndex,
@@ -333,34 +396,150 @@ class _MovieTicketPageState extends State<MovieTicketPage> {
                       onShowtimeSelected: _onSelectShowtime,
                       onProceed: _purchaseTicket,
                     ),
-                    const SizedBox(height: 32),
-                    
-                    // Synopsis Section
-                    const Text(
-                      'Synopsis',
-                      style: TextStyle(
-                        color: AppColors.textWhite,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      movie.overview.isNotEmpty ? movie.overview : 'Synopsis not available.',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        height: 1.6,
-                        fontSize: 14,
-                      ),
-                    ),
+                    _DetailSection(
+                      movie: movie,
+                      cast: _cast,
+                      crew: _crew,
+                      isLoading: _isLoadingDetails,
+                    )
                   ],
                 ),
               ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
+class _DetailSection extends StatelessWidget {
+  final MovieModel movie;
+  final List<CastMemberModel> cast;
+  final List<CrewMemberModel> crew;
+  final bool isLoading;
+
+  const _DetailSection({
+    required this.movie,
+    required this.cast,
+    required this.crew,
+    required this.isLoading,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final director = crew.firstWhere((member) => member.job == 'Director', orElse: () => CrewMemberModel(name: 'N/A', job: 'Director'));
+    final producer = crew.firstWhere((member) => member.job == 'Producer', orElse: () => CrewMemberModel(name: 'N/A', job: 'Producer'));
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Synopsis',
+            style: TextStyle(
+              color: AppColors.textWhite,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            movie.overview.isNotEmpty ? movie.overview : 'Synopsis not available.',
+            style: const TextStyle(
+              color: Colors.white70,
+              height: 1.6,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildDetailItem('Director', director.name),
+          _buildDetailItem('Producer', producer.name),
+          const SizedBox(height: 24),
+          const Text(
+            'Cast',
+            style: TextStyle(
+              color: AppColors.textWhite,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 180,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: cast.length,
+              itemBuilder: (context, index) {
+                final member = cast[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
+                  child: SizedBox(
+                    width: 100,
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: member.profilePath != null
+                                ? 'https://image.tmdb.org/t/p/w185${member.profilePath}'
+                                : 'https://via.placeholder.com/100x150.png?text=No+Image',
+                            width: 100,
+                            height: 120,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          member.name,
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+    Widget _buildDetailItem(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 class _ScheduleSection extends StatelessWidget {
   final int selectedDateIndex;
   final void Function(int index) onDateSelected;
@@ -390,201 +569,204 @@ class _ScheduleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Schedule',
-          style: TextStyle(
-            color: AppColors.textWhite,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Schedule',
+            style: TextStyle(
+              color: AppColors.textWhite,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
-        
-        // Dates
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(availableDates.length, (index) {
-              final date = availableDates[index];
-              final isSelected = selectedDateIndex == index;
-              final dayLabel = DateFormat('E', 'id_ID').format(date);
-              final dayNumber = DateFormat('dd', 'id_ID').format(date);
+          const SizedBox(height: 16),
+          
+          // Dates
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(availableDates.length, (index) {
+                final date = availableDates[index];
+                final isSelected = selectedDateIndex == index;
+                final dayLabel = DateFormat('E', 'id_ID').format(date);
+                final dayNumber = DateFormat('dd', 'id_ID').format(date);
 
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: GestureDetector(
-                  onTap: () => onDateSelected(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.gold : const Color(0xFF2C2C2C),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: GestureDetector(
+                    onTap: () => onDateSelected(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.gold : const Color(0xFF2C2C2C),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected ? AppColors.gold : Colors.transparent,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            dayLabel.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? AppColors.darkBackground : Colors.white70,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            dayNumber,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: isSelected ? AppColors.darkBackground : Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Cities
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(cities.length, (index) {
+                final city = cities[index];
+                final isSelected = selectedCityIndex == index;
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: FilterChip(
+                    label: Text(city),
+                    selected: isSelected,
+                    selectedColor: AppColors.gold,
+                    backgroundColor: const Color(0xFF2C2C2C),
+                    checkmarkColor: AppColors.darkBackground,
+                    labelStyle: TextStyle(
+                      color: isSelected ? AppColors.darkBackground : Colors.white70,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
                         color: isSelected ? AppColors.gold : Colors.transparent,
                       ),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    onSelected: (_) => onCitySelected(index),
+                  ),
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Cinemas & Times
+          Column(
+            children: cinemas.map((cinema) {
+              final name = cinema['name'] as String;
+              final times = (cinema['times'] as List).cast<String>();
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF252525),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: name == selectedCinema ? AppColors.gold.withOpacity(0.5) : Colors.transparent,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
+                        const Icon(Icons.movie_creation_outlined, color: Colors.white70, size: 20),
+                        const SizedBox(width: 8),
                         Text(
-                          dayLabel.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? AppColors.darkBackground : Colors.white70,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          dayNumber,
-                          style: TextStyle(
+                          name,
+                          style: const TextStyle(
+                            color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: isSelected ? AppColors.darkBackground : Colors.white,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ),
-        const SizedBox(height: 24),
-        
-        // Cities
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(cities.length, (index) {
-              final city = cities[index];
-              final isSelected = selectedCityIndex == index;
-
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: FilterChip(
-                  label: Text(city),
-                  selected: isSelected,
-                  selectedColor: AppColors.gold,
-                  backgroundColor: const Color(0xFF2C2C2C),
-                  checkmarkColor: AppColors.darkBackground,
-                  labelStyle: TextStyle(
-                    color: isSelected ? AppColors.darkBackground : Colors.white70,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: isSelected ? AppColors.gold : Colors.transparent,
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: times.map((time) {
+                        final isSelected = selectedCinema == name && selectedTime == time;
+                        return GestureDetector(
+                          onTap: () => onShowtimeSelected(name, time),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.gold : Colors.transparent,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected ? AppColors.gold : Colors.grey[700]!,
+                              ),
+                            ),
+                            child: Text(
+                              time,
+                              style: TextStyle(
+                                color: isSelected ? AppColors.darkBackground : Colors.white70,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
-                  ),
-                  onSelected: (_) => onCitySelected(index),
+                  ],
                 ),
               );
-            }),
+            }).toList(),
           ),
-        ),
-        const SizedBox(height: 24),
-        
-        // Cinemas & Times
-        Column(
-          children: cinemas.map((cinema) {
-            final name = cinema['name'] as String;
-            final times = (cinema['times'] as List).cast<String>();
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF252525),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: name == selectedCinema ? AppColors.gold.withOpacity(0.5) : Colors.transparent,
-                  width: 1,
+          const SizedBox(height: 24),
+          
+          // Proceed Button
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: selectedTime == null ? null : onProceed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.gold,
+                foregroundColor: AppColors.darkBackground,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                selectedTime == null ? 'Select Seats' : 'Select Seats - $selectedTime',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.movie_creation_outlined, color: Colors.white70, size: 20),
-                      const SizedBox(width: 8),
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: times.map((time) {
-                      final isSelected = selectedCinema == name && selectedTime == time;
-                      return GestureDetector(
-                        onTap: () => onShowtimeSelected(name, time),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppColors.gold : Colors.transparent,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isSelected ? AppColors.gold : Colors.grey[700]!,
-                            ),
-                          ),
-                          child: Text(
-                            time,
-                            style: TextStyle(
-                              color: isSelected ? AppColors.darkBackground : Colors.white70,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 24),
-        
-        // Proceed Button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: selectedTime == null ? null : onProceed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.gold,
-              foregroundColor: AppColors.darkBackground,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              elevation: 0,
-            ),
-            child: Text(
-              selectedTime == null ? 'Select Seats' : 'Select Seats - $selectedTime',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

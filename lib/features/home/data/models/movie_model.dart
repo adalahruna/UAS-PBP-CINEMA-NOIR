@@ -1,4 +1,6 @@
 import 'package:cinema_noir/core/constants/api_constants.dart';
+import 'package:cinema_noir/features/home/data/models/cast_member_model.dart';
+import 'package:cinema_noir/features/home/data/models/crew_member_model.dart';
 import 'package:equatable/equatable.dart';
 
 class MovieModel extends Equatable {
@@ -7,8 +9,10 @@ class MovieModel extends Equatable {
   final String overview;
   final String? posterPath;
   final double voteAverage;
-  final String? releaseDate; // TAMBAHKAN INI
-  final String? trailerKey; // TAMBAHKAN INI
+  final String? releaseDate;
+  final String? trailerKey;
+  final List<CastMemberModel>? cast;
+  final List<CrewMemberModel>? crew;
 
   const MovieModel({
     required this.id,
@@ -16,8 +20,10 @@ class MovieModel extends Equatable {
     required this.overview,
     this.posterPath,
     required this.voteAverage,
-    this.releaseDate, // TAMBAHKAN INI
-    this.trailerKey, // TAMBAHKAN INI
+    this.releaseDate,
+    this.trailerKey,
+    this.cast,
+    this.crew,
   });
 
   factory MovieModel.fromJson(Map<String, dynamic> json) {
@@ -27,12 +33,17 @@ class MovieModel extends Equatable {
       overview: json['overview'] as String,
       posterPath: json['poster_path'] as String?,
       voteAverage: (json['vote_average'] as num).toDouble(),
-      releaseDate: json['release_date'] as String?, // TAMBAHKAN INI
+      releaseDate: json['release_date'] as String?,
       trailerKey: null, // Akan diisi kemudian dari API videos
+      cast: (json['credits']?['cast'] as List<dynamic>?)
+          ?.map((e) => CastMemberModel.fromJson(e))
+          .toList(),
+      crew: (json['credits']?['crew'] as List<dynamic>?)
+          ?.map((e) => CrewMemberModel.fromJson(e))
+          .toList(),
     );
   }
 
-  // TAMBAHKAN METHOD copyWith
   MovieModel copyWith({
     int? id,
     String? title,
@@ -41,6 +52,8 @@ class MovieModel extends Equatable {
     double? voteAverage,
     String? releaseDate,
     String? trailerKey,
+    List<CastMemberModel>? cast,
+    List<CrewMemberModel>? crew,
   }) {
     return MovieModel(
       id: id ?? this.id,
@@ -50,6 +63,8 @@ class MovieModel extends Equatable {
       voteAverage: voteAverage ?? this.voteAverage,
       releaseDate: releaseDate ?? this.releaseDate,
       trailerKey: trailerKey ?? this.trailerKey,
+      cast: cast ?? this.cast,
+      crew: crew ?? this.crew,
     );
   }
 
@@ -61,5 +76,15 @@ class MovieModel extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, title, overview, posterPath, voteAverage, releaseDate, trailerKey];
+  List<Object?> get props => [
+        id,
+        title,
+        overview,
+        posterPath,
+        voteAverage,
+        releaseDate,
+        trailerKey,
+        cast,
+        crew,
+      ];
 }

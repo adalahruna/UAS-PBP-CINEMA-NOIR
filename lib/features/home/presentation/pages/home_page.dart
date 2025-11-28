@@ -5,28 +5,22 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cinema_noir/core/api/tmdb_service.dart';
+import 'package:cinema_noir/core/constants/app_colors.dart';
+import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/features/home/presentation/cubit/movie_cubit.dart';
 import 'package:cinema_noir/features/home/presentation/cubit/movie_state.dart';
+import 'package:cinema_noir/features/home/presentation/widgets/food_promo_section.dart';
+import 'package:cinema_noir/features/home/presentation/widgets/home_search_bar.dart';
+import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_state.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:cinema_noir/core/constants/app_colors.dart';
-import 'package:cinema_noir/features/home/data/models/movie_model.dart';
-import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.dart';
-import 'package:cinema_noir/features/home/presentation/widgets/food_promo_section.dart';
-import 'package:cinema_noir/features/home/presentation/widgets/home_search_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 
-
-
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -75,6 +69,7 @@ class _HomePageState extends State<HomePage> {
 
                       // SECTION 1: SEDANG TAYANG (HOVERABLE LIST)
                       _buildSectionHeader(
+                        context,
                         title: 'Sedang Tayang',
                         onTapSeeAll: () => context.go('/movies?category=now_playing'),
                       ),
@@ -84,6 +79,7 @@ class _HomePageState extends State<HomePage> {
                         _buildEmptyMovieMessage('Tidak ada film yang sesuai pencarian.')
                       else
                         _buildCenteredSwipeableMovieList(
+                          context,
                           movies: state.nowPlayingMovies,
                           isMobile: isMobile,
                           onBuyTicket: (movie) => context.push(
@@ -96,6 +92,7 @@ class _HomePageState extends State<HomePage> {
 
                       // SECTION 2: UPCOMING MOVIES
                       _buildSectionHeader(
+                        context,
                         title: 'Akan Tayang',
                         onTapSeeAll: () => context.go('/movies?category=upcoming'),
                       ),
@@ -105,6 +102,7 @@ class _HomePageState extends State<HomePage> {
                         _buildEmptyMovieMessage('Tidak ada film yang sesuai pencarian.')
                       else
                         _buildHorizontalMovieList(
+                          context,
                           movies: state.upcomingMovies,
                           isMobile: isMobile,
                           onBuyTicket: (movie) => context.push(
@@ -134,7 +132,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildCenteredSwipeableMovieList({
+  Widget _buildCenteredSwipeableMovieList(
+    BuildContext context, {
     required List<MovieModel> movies,
     required bool isMobile,
     required void Function(MovieModel movie) onBuyTicket,
@@ -186,7 +185,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHorizontalMovieList({
+  Widget _buildHorizontalMovieList(
+    BuildContext context, {
     required List<MovieModel> movies,
     required void Function(MovieModel movie) onBuyTicket,
     required bool isMobile,
@@ -254,11 +254,28 @@ class _HomePageState extends State<HomePage> {
                     builder: (context, authState) {
                       if (authState is Authenticated) {
                         return StreamBuilder<DocumentSnapshot>(
-                          stream: FirebaseFirestore.instance.collection('users').doc(authState.user.uid).snapshots(),
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(authState.user.uid)
+                              .snapshots(),
                           builder: (context, snapshot) {
-                            String location = 'JABODETABEK'; // Default
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.textWhite),
+                                ),
+                              );
+                            }
+
+                            String location = ''; // Default
                             if (snapshot.hasData && snapshot.data!.exists) {
-                              final data = snapshot.data!.data() as Map<String, dynamic>?;
+                              final data =
+                                  snapshot.data!.data() as Map<String, dynamic>?;
                               final city = data?['city'] as String?;
                               if (city != null && city.isNotEmpty) {
                                 location = city;
@@ -266,14 +283,19 @@ class _HomePageState extends State<HomePage> {
                             }
                             return TextButton.icon(
                               onPressed: () => context.push('/profile'),
-                              icon: const Icon(Icons.location_on_outlined, color: AppColors.textWhite, size: 18),
+                              icon: const Icon(Icons.location_on_outlined,
+                                  color: AppColors.textWhite, size: 18),
                               label: Text(
-                                location.toUpperCase(),
-                                style: const TextStyle(color: AppColors.textWhite, fontSize: 14),
+                                location.isNotEmpty
+                                    ? location.toUpperCase()
+                                    : 'Set Location'.toUpperCase(),
+                                style: const TextStyle(
+                                    color: AppColors.textWhite, fontSize: 14),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 4),
                                 backgroundColor: AppColors.darkGrey,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
@@ -284,22 +306,7 @@ class _HomePageState extends State<HomePage> {
                         );
                       }
                       // Fallback for when not authenticated or in loading state
-                      return TextButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(Icons.location_on_outlined, color: AppColors.textWhite, size: 18),
-                        label: const Text(
-                          'JABODETABEK',
-                          style: TextStyle(color: AppColors.textWhite, fontSize: 14),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          backgroundColor: AppColors.darkGrey,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                      );
+                      return const SizedBox.shrink();
                     },
                   ),
                 ),
@@ -309,7 +316,8 @@ class _HomePageState extends State<HomePage> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.local_offer_outlined, color: AppColors.textWhite),
+                icon: const Icon(Icons.local_offer_outlined,
+                    color: AppColors.textWhite),
                 tooltip: 'Promo',
                 onPressed: () {
                   print('Promo icon pressed!');
@@ -371,7 +379,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionHeader({
+  Widget _buildSectionHeader(
+    BuildContext context, {
     required String title,
     required VoidCallback onTapSeeAll,
   }) {

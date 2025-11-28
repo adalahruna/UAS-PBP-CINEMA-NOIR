@@ -1,5 +1,7 @@
 // lib/core/api/tmdb_service.dart
 
+import 'package:cinema_noir/features/home/data/models/cast_member_model.dart';
+import 'package:cinema_noir/features/home/data/models/crew_member_model.dart';
 import 'package:dio/dio.dart';
 import 'package:cinema_noir/core/constants/api_constants.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
@@ -112,6 +114,22 @@ class TmdbService {
     } catch (e) {
       print('Error getTopRatedMovies: $e');
       rethrow;
+    }
+  }
+
+  Future<Map<String, List>> getMovieCredits(int movieId) async {
+    try {
+      final response = await _dio.get('/movie/$movieId/credits');
+      final cast = (response.data['cast'] as List)
+          .map((c) => CastMemberModel.fromJson(c))
+          .toList();
+      final crew = (response.data['crew'] as List)
+          .map((c) => CrewMemberModel.fromJson(c))
+          .toList();
+      return {'cast': cast, 'crew': crew};
+    } catch (e) {
+      print('Error getMovieCredits: $e');
+      return {'cast': [], 'crew': []};
     }
   }
 }

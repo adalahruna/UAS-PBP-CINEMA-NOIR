@@ -148,6 +148,15 @@ class _CommunityPageState extends State<CommunityPage> {
       ),
       child: Row(
         children: [
+          IconButton(
+            onPressed: () => context.pop(),
+            icon: Icon(
+              Icons.arrow_back,
+              color: AppColors.gold,
+              size: iconSize,
+            ),
+          ),
+          const SizedBox(width: 8),
           Text(
             'Community',
             style: TextStyle(
@@ -193,7 +202,7 @@ class _CommunityPageState extends State<CommunityPage> {
 
   Widget _buildSearchSection() {
     final screenWidth = MediaQuery.of(context).size.width;
-    final double width = screenWidth < 400 ? screenWidth * 0.85 : 320;
+    final double width = screenWidth < 600 ? screenWidth * 0.9 : 500;
 
     return Center(
       child: Container(
@@ -402,47 +411,50 @@ class _CommunityPageState extends State<CommunityPage> {
               flex: 2,
               child: Padding(
                 padding: EdgeInsets.all(cardPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      movie.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppColors.textWhite,
-                        fontSize: titleFontSize,
-                        fontWeight: FontWeight.w600,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        movie.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.textWhite,
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.star,
-                          color: AppColors.gold,
-                          size: starSize,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          movie.voteAverage.toStringAsFixed(1),
-                          style: TextStyle(
-                            color: AppColors.textGrey,
-                            fontSize: metaFontSize,
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.star,
+                            color: AppColors.gold,
+                            size: starSize,
                           ),
-                        ),
-                        const Spacer(),
-                        if (movie.releaseDate != null && movie.releaseDate!.isNotEmpty)
+                          const SizedBox(width: 4),
                           Text(
-                            movie.releaseDate!.substring(0, 4),
+                            movie.voteAverage.toStringAsFixed(1),
                             style: TextStyle(
                               color: AppColors.textGrey,
                               fontSize: metaFontSize,
                             ),
                           ),
-                      ],
-                    ),
-                  ],
+                          const Spacer(),
+                          if (movie.releaseDate != null &&
+                              movie.releaseDate!.isNotEmpty)
+                            Text(
+                              movie.releaseDate!.substring(0, 4),
+                              style: TextStyle(
+                                color: AppColors.textGrey,
+                                fontSize: metaFontSize,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
