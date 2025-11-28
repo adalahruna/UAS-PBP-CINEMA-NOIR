@@ -50,6 +50,8 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String password,
     required String fullName,
+    String province = 'Jawa Timur',
+    String city = 'Madiun',
   }) async {
     try {
       emit(AuthLoading());
@@ -65,7 +67,12 @@ class AuthCubit extends Cubit<AuthState> {
         await user.updateDisplayName(fullName);
 
         // 3. Simpan data awal user ke Firestore
-        await _saveUserToFirestore(user: user, fullName: fullName);
+        await _saveUserToFirestore(
+          user: user,
+          fullName: fullName,
+          province: province,
+          city: city,
+        );
 
         // 4. Kirim Email Verifikasi
         await user.sendEmailVerification();
@@ -160,15 +167,17 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> _saveUserToFirestore({
     required User user,
     required String fullName,
+    String province = 'Jawa Timur',
+    String city = 'Madiun',
   }) async {
     try {
       await _firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,
         'email': user.email,
         'fullName': fullName,
-        'province': '', // Default kosong
-        'city': '',     // Default kosong
-        'photoUrl': '', // Default kosong
+        'province': province,
+        'city': city,
+        'photoUrl': '',
         'createdAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {

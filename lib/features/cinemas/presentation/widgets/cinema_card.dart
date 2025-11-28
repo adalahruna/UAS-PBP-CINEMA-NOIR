@@ -41,16 +41,23 @@ class CinemaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: EdgeInsets.only(bottom: isMobile ? 16 : 0),
       decoration: BoxDecoration(
         color: AppColors.darkGrey,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -58,94 +65,130 @@ class CinemaCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Cinema Image
+              // Cinema Image with gradient overlay
               ClipRRect(
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  topRight: Radius.circular(12),
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
-                child: cinema.imageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: cinema.imageUrl!,
-                        height: 180,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          height: 180,
-                          color: AppColors.darkGrey,
-                          child: const Center(
-                            child: CircularProgressIndicator(
+                child: Stack(
+                  children: [
+                    cinema.imageUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: cinema.imageUrl!,
+                            height: isMobile ? 180 : 200,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              height: isMobile ? 180 : 200,
+                              color: AppColors.darkGrey,
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  color: AppColors.gold,
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Container(
+                              height: isMobile ? 180 : 200,
+                              color: AppColors.darkGrey,
+                              child: const Icon(
+                                Icons.movie,
+                                size: 50,
+                                color: AppColors.gold,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            height: isMobile ? 180 : 200,
+                            color: AppColors.darkGrey,
+                            child: const Icon(
+                              Icons.movie,
+                              size: 50,
                               color: AppColors.gold,
                             ),
                           ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          height: 180,
-                          color: AppColors.darkGrey,
-                          child: const Icon(
-                            Icons.movie,
-                            size: 50,
-                            color: AppColors.gold,
+                    // Gradient overlay
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
                           ),
                         ),
-                      )
-                    : Container(
-                        height: 180,
-                        color: AppColors.darkGrey,
-                        child: const Icon(
-                          Icons.movie,
-                          size: 50,
-                          color: AppColors.gold,
+                      ),
+                    ),
+                    // Open badge
+                    if (cinema.isOpen)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Colors.green, Colors.lightGreen],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.withOpacity(0.5),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.circle, color: Colors.white, size: 8),
+                              SizedBox(width: 6),
+                              Text(
+                                'OPEN',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
+                  ],
+                ),
               ),
 
               // Cinema Details
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(isMobile ? 16 : 18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Cinema Name
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            cinema.name,
-                            style: const TextStyle(
-                              color: AppColors.gold,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (cinema.isOpen)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.green),
-                            ),
-                            child: const Text(
-                              'OPEN',
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
+                    Text(
+                      cinema.name,
+                      style: TextStyle(
+                        color: AppColors.gold,
+                        fontSize: isMobile ? 17 : 19,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
                     // Address
                     Row(
@@ -247,30 +290,43 @@ class CinemaCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: OutlinedButton.icon(
+                          child: ElevatedButton.icon(
                             onPressed: () => _makePhoneCall(cinema.phone),
                             icon: const Icon(Icons.phone, size: 18),
-                            label: const Text('Call'),
-                            style: OutlinedButton.styleFrom(
+                            label: Text(isMobile ? 'Call' : 'Call Now'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.gold.withOpacity(0.15),
                               foregroundColor: AppColors.gold,
-                              side: const BorderSide(color: AppColors.gold),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              elevation: 0,
+                              padding: EdgeInsets.symmetric(
+                                vertical: isMobile ? 12 : 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: const BorderSide(color: AppColors.gold, width: 1.5),
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: OutlinedButton.icon(
+                          child: ElevatedButton.icon(
                             onPressed: () => _openMaps(
                               cinema.latitude,
                               cinema.longitude,
                             ),
-                            icon: const Icon(Icons.map, size: 18),
-                            label: const Text('Navigate'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.gold,
-                              side: const BorderSide(color: AppColors.gold),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            icon: const Icon(Icons.navigation, size: 18),
+                            label: Text(isMobile ? 'Navigate' : 'Get Directions'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.gold,
+                              foregroundColor: AppColors.darkBackground,
+                              elevation: 3,
+                              padding: EdgeInsets.symmetric(
+                                vertical: isMobile ? 12 : 14,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
                           ),
                         ),

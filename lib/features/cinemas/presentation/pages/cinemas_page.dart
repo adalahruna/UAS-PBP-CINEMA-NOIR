@@ -81,107 +81,157 @@ class _CinemasPageState extends State<CinemasPage>
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.darkBackground,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title and back button
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: AppColors.gold),
-                onPressed: () => Navigator.pop(context),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'CINEMAS',
-                style: TextStyle(
-                  color: AppColors.gold,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final isMobile = screenWidth < 768;
+
+        return Container(
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
+          decoration: BoxDecoration(
+            color: AppColors.darkBackground,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Search Bar
-          TextField(
-            controller: _searchController,
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
-            style: const TextStyle(color: AppColors.textWhite),
-            decoration: InputDecoration(
-              hintText: 'Search cinema or location...',
-              hintStyle: const TextStyle(color: AppColors.textGrey),
-              prefixIcon: const Icon(Icons.search, color: AppColors.gold),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: AppColors.textGrey),
-                      onPressed: () {
-                        setState(() {
-                          _searchController.clear();
-                          _searchQuery = '';
-                        });
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: AppColors.darkGrey,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-          ),
-
-          // City Filter
-          const SizedBox(height: 12),
-          BlocBuilder<CinemaCubit, CinemaState>(
-            builder: (context, state) {
-              if (state is CinemaLoaded) {
-                return SizedBox(
-                  height: 40,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1200),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title and back button
+                  Row(
                     children: [
-                      _buildCityChip('All', _selectedCity == null),
-                      ...state.cities.map(
-                        (city) => _buildCityChip(
-                          city,
-                          _selectedCity == city,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.darkGrey,
+                          shape: BoxShape.circle,
                         ),
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.gold, size: 18),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        'CINEMAS',
+                        style: TextStyle(
+                          color: AppColors.gold,
+                          fontSize: isMobile ? 22 : 28,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
+                          fontFamily: 'Montserrat',
+                        ),
+                      ),
+                      const Spacer(),
+                      // Cinema count badge
+                      BlocBuilder<CinemaCubit, CinemaState>(
+                        builder: (context, state) {
+                          if (state is CinemaLoaded) {
+                            final count = _filterCinemas(state.cinemas).length;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.gold.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.gold),
+                              ),
+                              child: Text(
+                                '$count ${count == 1 ? 'Cinema' : 'Cinemas'}',
+                                style: const TextStyle(
+                                  color: AppColors.gold,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
                       ),
                     ],
                   ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
+                  const SizedBox(height: 20),
+
+                  // Search Bar
+                  TextField(
+                    controller: _searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                    style: const TextStyle(color: AppColors.textWhite),
+                    decoration: InputDecoration(
+                      hintText: 'Search cinema or location...',
+                      hintStyle: const TextStyle(color: AppColors.textGrey),
+                      prefixIcon: const Icon(Icons.search, color: AppColors.gold),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, color: AppColors.textGrey),
+                              onPressed: () {
+                                setState(() {
+                                  _searchController.clear();
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                      filled: true,
+                      fillColor: AppColors.darkGrey,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: const BorderSide(color: AppColors.gold, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                    ),
+                  ),
+
+                  // City Filter
+                  const SizedBox(height: 16),
+                  BlocBuilder<CinemaCubit, CinemaState>(
+                    builder: (context, state) {
+                      if (state is CinemaLoaded) {
+                        return SizedBox(
+                          height: 44,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              _buildCityChip('All', _selectedCity == null),
+                              ...state.cities.map(
+                                (city) => _buildCityChip(
+                                  city,
+                                  _selectedCity == city,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -315,17 +365,55 @@ class _CinemasPageState extends State<CinemasPage>
             onRefresh: () async {
               await context.read<CinemaCubit>().fetchCinemas();
             },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredCinemas.length,
-              itemBuilder: (context, index) {
-                final cinema = filteredCinemas[index];
-                return CinemaCard(
-                  cinema: cinema,
-                  onTap: () {
-                    _showCinemaDetails(context, cinema);
-                  },
-                );
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final screenWidth = constraints.maxWidth;
+                final isMobile = screenWidth < 768;
+                final isTablet = screenWidth >= 768 && screenWidth < 1024;
+                final isDesktop = screenWidth >= 1024;
+
+                // Tentukan jumlah kolom berdasarkan ukuran layar
+                int crossAxisCount = 1;
+                if (isTablet) crossAxisCount = 2;
+                if (isDesktop) crossAxisCount = 3;
+
+                if (isMobile) {
+                  // Mobile: List view
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredCinemas.length,
+                    itemBuilder: (context, index) {
+                      final cinema = filteredCinemas[index];
+                      return CinemaCard(
+                        cinema: cinema,
+                        onTap: () {
+                          _showCinemaDetails(context, cinema);
+                        },
+                      );
+                    },
+                  );
+                } else {
+                  // Tablet & Desktop: Grid view
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(20),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      childAspectRatio: isDesktop ? 0.85 : 0.75,
+                    ),
+                    itemCount: filteredCinemas.length,
+                    itemBuilder: (context, index) {
+                      final cinema = filteredCinemas[index];
+                      return CinemaCard(
+                        cinema: cinema,
+                        onTap: () {
+                          _showCinemaDetails(context, cinema);
+                        },
+                      );
+                    },
+                  );
+                }
               },
             ),
           );
@@ -376,22 +464,60 @@ class _CinemasPageState extends State<CinemasPage>
   }
 
   Widget _buildShimmerLoading() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 5,
-      itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: AppColors.darkGrey,
-          highlightColor: AppColors.darkGrey.withOpacity(0.5),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            height: 320,
-            decoration: BoxDecoration(
-              color: AppColors.darkGrey,
-              borderRadius: BorderRadius.circular(12),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final isMobile = screenWidth < 768;
+        final isTablet = screenWidth >= 768 && screenWidth < 1024;
+        final isDesktop = screenWidth >= 1024;
+
+        int crossAxisCount = 1;
+        if (isTablet) crossAxisCount = 2;
+        if (isDesktop) crossAxisCount = 3;
+
+        if (isMobile) {
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              return Shimmer.fromColors(
+                baseColor: AppColors.darkGrey,
+                highlightColor: AppColors.darkGrey.withOpacity(0.5),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  height: 320,
+                  decoration: BoxDecoration(
+                    color: AppColors.darkGrey,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              );
+            },
+          );
+        } else {
+          return GridView.builder(
+            padding: const EdgeInsets.all(20),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+              childAspectRatio: isDesktop ? 0.85 : 0.75,
             ),
-          ),
-        );
+            itemCount: 6,
+            itemBuilder: (context, index) {
+              return Shimmer.fromColors(
+                baseColor: AppColors.darkGrey,
+                highlightColor: AppColors.darkGrey.withOpacity(0.5),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.darkGrey,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              );
+            },
+          );
+        }
       },
     );
   }

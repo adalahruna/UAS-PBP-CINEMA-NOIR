@@ -260,36 +260,39 @@ class HomePage extends StatelessWidget {
                               .doc(authState.user.uid)
                               .snapshots(),
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.textWhite),
-                                ),
-                              );
-                            }
-
+                            // Tentukan lokasi berdasarkan status snapshot
                             String location = 'Madiun'; // Default
+                            bool isLoading = snapshot.connectionState == ConnectionState.waiting;
+                            
+                            // Jika data sudah ada dan dokumen exists
                             if (snapshot.hasData && snapshot.data!.exists) {
-                              final data =
-                                  snapshot.data!.data() as Map<String, dynamic>?;
+                              final data = snapshot.data!.data() as Map<String, dynamic>?;
                               final city = data?['city'] as String?;
                               if (city != null && city.isNotEmpty) {
                                 location = city;
                               }
                             }
+                            // Jika snapshot sudah selesai tapi dokumen tidak ada (user baru)
+                            else if (snapshot.hasData && !snapshot.data!.exists) {
+                              location = 'Madiun'; // Tetap gunakan default
+                            }
+
                             return TextButton.icon(
                               onPressed: () => context.push('/profile'),
-                              icon: const Icon(Icons.location_on_outlined,
-                                  color: AppColors.textWhite, size: 18),
+                              icon: isLoading
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                            AppColors.textWhite),
+                                      ),
+                                    )
+                                  : const Icon(Icons.location_on_outlined,
+                                      color: AppColors.textWhite, size: 18),
                               label: Text(
-                                location.isNotEmpty
-                                    ? location.toUpperCase()
-                                    : 'Set Location'.toUpperCase(),
+                                location.toUpperCase(),
                                 style: const TextStyle(
                                     color: AppColors.textWhite, fontSize: 14),
                                 overflow: TextOverflow.ellipsis,

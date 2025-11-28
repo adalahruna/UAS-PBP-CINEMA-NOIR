@@ -21,6 +21,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPassController = TextEditingController();
+  final _provinceController = TextEditingController();
+  final _cityController = TextEditingController();
   
   bool _obscurePass = true;
   bool _obscureConfirm = true;
@@ -32,6 +34,8 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPassController.dispose();
+    _provinceController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 
@@ -47,6 +51,8 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
+        province: _provinceController.text.trim(),
+        city: _cityController.text.trim(),
       );
     }
   }
@@ -116,6 +122,30 @@ class _RegisterPageState extends State<RegisterPage> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
                       validator: (v) => (!v!.contains('@') || !v.contains('.')) ? 'Format email salah' : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Provinsi
+                    TextFormField(
+                      controller: _provinceController,
+                      decoration: const InputDecoration(
+                        labelText: 'Provinsi',
+                        prefixIcon: Icon(Icons.map),
+                        hintText: 'Contoh: Jawa Timur',
+                      ),
+                      validator: (v) => v!.isEmpty ? 'Provinsi wajib diisi' : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Kota
+                    TextFormField(
+                      controller: _cityController,
+                      decoration: const InputDecoration(
+                        labelText: 'Kota',
+                        prefixIcon: Icon(Icons.location_city),
+                        hintText: 'Contoh: Madiun',
+                      ),
+                      validator: (v) => v!.isEmpty ? 'Kota wajib diisi' : null,
                     ),
                     const SizedBox(height: 16),
 
