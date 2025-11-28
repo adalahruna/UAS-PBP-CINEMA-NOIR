@@ -27,77 +27,78 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
   final Map<String, int> _cart = {};
   bool _isSearching = false;
   String _searchQuery = '';
+  bool _isGridView = true; // Toggle untuk grid/list view
 
   // Data Dummy Menu
   final List<FoodModel> _allFoods = [
     const FoodModel(
       id: '1',
-      name: 'Combo Couple Date',
-      description: '1 Large Popcorn + 2 Coca Cola + 1 Nachos Cheese.',
+      name: 'Couple Date Combo',
+      description: 'Large Popcorn + 2 Drinks + Nachos. Perfect for movie dates!',
       price: 85000,
       category: 'combo',
       imageUrl:
-          'https://images.unsplash.com/photo-1585647347384-2593bc35786b?q=80&w=1000&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1578849278619-e73505e9610f?q=80&w=1000&auto=format&fit=crop',
       rating: 4.9,
     ),
     const FoodModel(
       id: '2',
       name: 'Caramel Popcorn XL',
-      description: 'Popcorn renyah dengan lapisan karamel manis premium.',
+      description: 'Extra large crispy popcorn with premium caramel coating.',
       price: 55000,
       category: 'popcorn',
       imageUrl:
-          'https://images.unsplash.com/photo-1578849278619-e73505e9610f?q=80&w=1000&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1585647347384-2593bc35786b?q=80&w=1000&auto=format&fit=crop',
       rating: 4.8,
     ),
     const FoodModel(
       id: '3',
-      name: 'Salty Popcorn',
-      description: 'Popcorn gurih original bioskop.',
+      name: 'Classic Salty Popcorn',
+      description: 'Traditional movie theater popcorn, perfectly salted.',
       price: 40000,
       category: 'popcorn',
       imageUrl:
-          'https://images.unsplash.com/photo-1605218427368-35b0121d2319?q=80&w=1000&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?q=80&w=1000&auto=format&fit=crop',
       rating: 4.5,
     ),
     const FoodModel(
       id: '4',
       name: 'Coca Cola Large',
-      description: 'Minuman bersoda dingin menyegarkan.',
+      description: 'Ice-cold refreshing carbonated drink.',
       price: 25000,
       category: 'drink',
       imageUrl:
-          'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=1000&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?q=80&w=1000&auto=format&fit=crop',
       rating: 4.6,
     ),
     const FoodModel(
       id: '5',
       name: 'Iced Lemon Tea',
-      description: 'Teh lemon segar dengan es batu.',
+      description: 'Fresh lemon tea with ice cubes. Refreshing!',
       price: 30000,
       category: 'drink',
       imageUrl:
-          'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=1000&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1556679343-c7306c1976bc?q=80&w=1000&auto=format&fit=crop',
       rating: 4.4,
     ),
     const FoodModel(
       id: '6',
-      name: 'Nachos Cheese',
-      description: 'Keripik tortilla renyah saus keju.',
+      name: 'Nachos with Cheese',
+      description: 'Crispy tortilla chips with melted cheese sauce.',
       price: 50000,
       category: 'snack',
       imageUrl:
-          'https://images.unsplash.com/photo-1574315042633-5945277350cd?q=80&w=1000&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?q=80&w=1000&auto=format&fit=crop',
       rating: 4.9,
     ),
     const FoodModel(
       id: '7',
-      name: 'Hotdog Beef',
-      description: 'Roti sosis sapi panggang.',
+      name: 'Beef Hotdog',
+      description: 'Grilled beef sausage in toasted bun.',
       price: 45000,
       category: 'snack',
       imageUrl:
-          'https://images.unsplash.com/photo-1619740455993-9e612b1af08a?q=80&w=1000&auto=format&fit=crop',
+          'https://images.unsplash.com/photo-1612392166686-ee72bc828089?q=80&w=1000&auto=format&fit=crop',
       rating: 4.3,
     ),
   ];
@@ -143,7 +144,6 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     ).format(amount);
   }
 
-  // --- Logic Keranjang ---
   void _incrementItem(FoodModel food) {
     setState(() => _cart[food.id] = (_cart[food.id] ?? 0) + 1);
   }
@@ -175,11 +175,10 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     return total;
   }
 
-  // --- FUNGSI UNTUK MENAMPILKAN DETAIL (Bottom Sheet) ---
   void _showFoodDetail(BuildContext context, FoodModel food) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Agar bisa full height/custom height
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
@@ -202,168 +201,278 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     );
   }
 
+  // Get responsive cross axis count
+  int _getCrossAxisCount(double screenWidth) {
+    if (screenWidth > 1200) return 5;
+    if (screenWidth > 900) return 4;
+    if (screenWidth > 600) return 3;
+    return 2;
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasItems = _cart.isNotEmpty;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
 
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.darkBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: AppColors.gold,
-            size: 20,
-          ),
-          onPressed: () => context.pop(),
-        ),
-        title: const Text(
-          'm.food',
-          style: TextStyle(
-            color: AppColors.gold,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Montserrat',
-            letterSpacing: 1.2,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 10),
-                // 1. SEARCH BAR
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.darkGrey,
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: _isSearching ? AppColors.gold : Colors.white10,
-                        width: 1,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            CustomScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // App Bar
+                SliverAppBar(
+                  pinned: true,
+                  floating: true,
+                  backgroundColor: AppColors.darkBackground,
+                  elevation: 0,
+                  leading: IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.darkGrey,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new,
+                        color: AppColors.gold,
+                        size: 18,
                       ),
                     ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: 'Cari makanan favoritmu...',
-                        hintStyle: TextStyle(
-                          color: AppColors.textGrey.withOpacity(0.5),
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: _isSearching
-                              ? AppColors.gold
-                              : AppColors.textGrey,
-                        ),
-                        suffixIcon: _isSearching
-                            ? IconButton(
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () => _searchController.clear(),
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 15,
+                    onPressed: () => context.pop(),
+                  ),
+                  title: Text(
+                    'Food',
+                    style: TextStyle(
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Montserrat',
+                      letterSpacing: 2,
+                      fontSize: isMobile ? 20 : 24,
+                    ),
+                  ),
+                  centerTitle: true,
+                ),
+
+                // Search Bar (Movie-style centered with max width)
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: Container(
+                      constraints: BoxConstraints(
+                        maxWidth: (screenWidth * 0.85).clamp(0, 600),
+                      ),
+                      padding: EdgeInsets.fromLTRB(
+                        isMobile ? 16 : 20,
+                        10,
+                        isMobile ? 16 : 20,
+                        16,
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        style: const TextStyle(color: AppColors.textWhite),
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 12.0,
+                            horizontal: 16.0,
+                          ),
+                          hintText: 'Search food...',
+                          hintStyle: const TextStyle(color: AppColors.textGrey),
+                          prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
+                          suffixIcon: _isSearching
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear, color: AppColors.textGrey),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: AppColors.darkGrey,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(30.0),
+                            borderSide: const BorderSide(color: AppColors.gold, width: 2),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                // 2. KONTEN DINAMIS
+
+                // Dynamic Content
                 if (_isSearching) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'Hasil Pencarian: "$_searchQuery"',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.search, color: AppColors.gold, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Results for "$_searchQuery"',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isMobile ? 14 : 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  _buildFoodList(isSearchResult: true),
+                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                  _isGridView
+                      ? _buildFoodGridSliver(isSearchResult: true, screenWidth: screenWidth)
+                      : _buildFoodListSliver(isSearchResult: true, screenWidth: screenWidth),
                 ] else ...[
-                  const FoodPromoCarousel(),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: const [
-                        Icon(
-                          Icons.local_fire_department,
-                          color: Colors.orangeAccent,
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Lagi Hot Nih!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const FoodPromoCarousel(),
+                        SizedBox(height: isMobile ? 24 : 32),
+                        
+                        // Hot Items Section
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [Colors.orange.shade600, Colors.red.shade600],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.local_fire_department_rounded,
+                                  color: Colors.white,
+                                  size: isMobile ? 18 : 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Hot Items!',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: isMobile ? 18 : 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(height: 16),
+                        HotItemsCarousel(foods: _allFoods, onAdd: _incrementItem),
+                        SizedBox(height: isMobile ? 24 : 32),
+                        
+                        // Browse Menu Section with View Toggle
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: AppColors.gold, width: 1.5),
+                                ),
+                                child: Icon(
+                                  Icons.restaurant_menu_rounded,
+                                  color: AppColors.gold,
+                                  size: isMobile ? 18 : 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  'Browse Menu',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: isMobile ? 18 : 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              // View Toggle Buttons
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.darkGrey,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.white10),
+                                ),
+                                child: Row(
+                                  children: [
+                                    _buildViewToggleButton(
+                                      icon: Icons.grid_view_rounded,
+                                      isSelected: _isGridView,
+                                      onTap: () => setState(() => _isGridView = true),
+                                      isMobile: isMobile,
+                                    ),
+                                    Container(
+                                      width: 1,
+                                      height: 24,
+                                      color: Colors.white10,
+                                    ),
+                                    _buildViewToggleButton(
+                                      icon: Icons.view_list_rounded,
+                                      isSelected: !_isGridView,
+                                      onTap: () => setState(() => _isGridView = false),
+                                      isMobile: isMobile,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        FoodCategoryButtons(
+                          selectedCategory: _selectedCategory,
+                          onCategorySelected: (category) =>
+                              setState(() => _selectedCategory = category),
+                        ),
+                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  HotItemsCarousel(foods: _allFoods, onAdd: _incrementItem),
-                  const SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: const Text(
-                      'Jelajahi Menu',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  FoodCategoryButtons(
-                    selectedCategory: _selectedCategory,
-                    onCategorySelected: (category) =>
-                        setState(() => _selectedCategory = category),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildFoodList(isSearchResult: false),
+                  _isGridView
+                      ? _buildFoodGridSliver(isSearchResult: false, screenWidth: screenWidth)
+                      : _buildFoodListSliver(isSearchResult: false, screenWidth: screenWidth),
                 ],
-                const SizedBox(height: 100),
+                
+                const SliverToBoxAdapter(child: SizedBox(height: 120)),
               ],
             ),
-          ),
-          // 3. FLOATING CART
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            bottom: hasItems ? 30 : -100,
-            left: 20,
-            right: 20,
-            child: _buildFloatingCart(),
-          ),
-        ],
+
+            // Floating Cart
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              bottom: hasItems ? 20 : -100,
+              left: isMobile ? 16 : 20,
+              right: isMobile ? 16 : 20,
+              child: _buildFloatingCart(isMobile),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFoodList({required bool isSearchResult}) {
+  Widget _buildFoodGridSliver({required bool isSearchResult, required double screenWidth}) {
     List<FoodModel> foodsToShow;
     if (isSearchResult) {
       foodsToShow = _filteredFoods;
@@ -373,73 +482,144 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
           : _allFoods.where((f) => f.category == _selectedCategory).toList();
     }
 
+    final isMobile = screenWidth < 768;
+    final crossAxisCount = _getCrossAxisCount(screenWidth);
+    final horizontalPadding = isMobile ? 16.0 : 20.0;
+    final gridSpacing = isMobile ? 12.0 : 16.0;
+
     if (foodsToShow.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Center(
-          child: Text(
-            isSearchResult ? "Menu tidak ditemukan" : "Kategori ini kosong",
-            style: TextStyle(
-              color: AppColors.textGrey.withOpacity(0.5),
-              fontSize: 16,
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.all(isMobile ? 24 : 32),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.search_off_rounded,
+                  size: isMobile ? 48 : 64,
+                  color: AppColors.textGrey.withOpacity(0.5),
+                ),
+                SizedBox(height: isMobile ? 12 : 16),
+                Text(
+                  isSearchResult ? "No food found" : "Category is empty",
+                  style: TextStyle(
+                    color: AppColors.textGrey.withOpacity(0.5),
+                    fontSize: isMobile ? 14 : 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       );
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: foodsToShow.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 16),
-      itemBuilder: (context, index) => _buildFoodListItem(foodsToShow[index]),
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      sliver: SliverGrid(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          mainAxisSpacing: gridSpacing,
+          crossAxisSpacing: gridSpacing,
+          childAspectRatio: isMobile ? 0.7 : 0.75,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => _buildFoodGridItem(foodsToShow[index], isMobile),
+          childCount: foodsToShow.length,
+        ),
+      ),
     );
   }
 
-  Widget _buildFoodListItem(FoodModel food) {
+  Widget _buildFoodGridItem(FoodModel food, bool isMobile) {
     final qty = _cart[food.id] ?? 0;
     final bool isSelected = qty > 0;
 
     return GestureDetector(
       onTap: () => _showFoodDetail(context, food),
       child: Container(
-        height: 110,
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.gold.withOpacity(0.05)
+              ? AppColors.gold.withOpacity(0.08)
               : AppColors.darkGrey,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
           border: isSelected
-              ? Border.all(color: AppColors.gold.withOpacity(0.3), width: 1)
-              : Border.all(color: Colors.transparent),
+              ? Border.all(color: AppColors.gold.withOpacity(0.5), width: 2)
+              : null,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
+              color: isSelected
+                  ? AppColors.gold.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.3),
+              blurRadius: isMobile ? 8 : 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.horizontal(
-                left: Radius.circular(16),
-              ),
-              child: CachedNetworkImage(
-                imageUrl: food.imageUrl,
-                width: 110,
-                height: 110,
-                fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    Container(color: Colors.grey[900]),
+            // Image
+            Expanded(
+              flex: 3,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(isMobile ? 16 : 20),
+                    ),
+                    child: CachedNetworkImage(
+                      imageUrl: food.imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey[900],
+                        child: const Center(
+                          child: CircularProgressIndicator(color: AppColors.gold),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Rating Badge
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 6 : 8,
+                        vertical: isMobile ? 3 : 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.star, color: AppColors.gold, size: isMobile ? 10 : 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            food.rating.toString(),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isMobile ? 10 : 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+            
+            // Details
             Expanded(
+              flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: EdgeInsets.all(isMobile ? 8 : 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -451,93 +631,377 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                           food.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: isMobile ? 12 : 14,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: isMobile ? 2 : 4),
                         Text(
-                          food.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textGrey,
-                            fontSize: 11,
+                          _formatCurrency(food.price),
+                          style: TextStyle(
+                            color: AppColors.gold,
+                            fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 11 : 13,
                           ),
                         ),
                       ],
                     ),
+                    
+                    // Add Button
+                    if (qty == 0)
+                      Container(
+                        width: double.infinity,
+                        height: isMobile ? 28 : 32,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [AppColors.gold, AppColors.gold.withOpacity(0.8)],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _incrementItem(food),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Center(
+                              child: Text(
+                                'ADD',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: isMobile ? 10 : 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        height: isMobile ? 28 : 32,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [AppColors.gold, AppColors.gold.withOpacity(0.8)],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                Icons.remove_rounded,
+                                size: isMobile ? 16 : 18,
+                                color: Colors.black,
+                              ),
+                              onPressed: () => _decrementItem(food),
+                            ),
+                            Text(
+                              '$qty',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: isMobile ? 12 : 14,
+                              ),
+                            ),
+                            IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                Icons.add_rounded,
+                                size: isMobile ? 16 : 18,
+                                color: Colors.black,
+                              ),
+                              onPressed: () => _incrementItem(food),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildViewToggleButton({
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+    required bool isMobile,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: EdgeInsets.all(isMobile ? 8 : 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.gold.withOpacity(0.2) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          icon,
+          color: isSelected ? AppColors.gold : AppColors.textGrey,
+          size: isMobile ? 18 : 20,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFoodListSliver({required bool isSearchResult, required double screenWidth}) {
+    List<FoodModel> foodsToShow;
+    if (isSearchResult) {
+      foodsToShow = _filteredFoods;
+    } else {
+      foodsToShow = _selectedCategory == 'all'
+          ? _allFoods
+          : _allFoods.where((f) => f.category == _selectedCategory).toList();
+    }
+
+    final isMobile = screenWidth < 768;
+    final horizontalPadding = isMobile ? 16.0 : 20.0;
+
+    if (foodsToShow.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: EdgeInsets.all(isMobile ? 24 : 32),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.search_off_rounded,
+                  size: isMobile ? 48 : 64,
+                  color: AppColors.textGrey.withOpacity(0.5),
+                ),
+                SizedBox(height: isMobile ? 12 : 16),
+                Text(
+                  isSearchResult ? "No food found" : "Category is empty",
+                  style: TextStyle(
+                    color: AppColors.textGrey.withOpacity(0.5),
+                    fontSize: isMobile ? 14 : 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) => Padding(
+            padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
+            child: _buildFoodListItem(foodsToShow[index], isMobile),
+          ),
+          childCount: foodsToShow.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFoodListItem(FoodModel food, bool isMobile) {
+    final qty = _cart[food.id] ?? 0;
+    final bool isSelected = qty > 0;
+
+    return GestureDetector(
+      onTap: () => _showFoodDetail(context, food),
+      child: Container(
+        height: isMobile ? 120 : 140,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.gold.withOpacity(0.08)
+              : AppColors.darkGrey,
+          borderRadius: BorderRadius.circular(isMobile ? 16 : 20),
+          border: isSelected
+              ? Border.all(color: AppColors.gold.withOpacity(0.5), width: 2)
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppColors.gold.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.3),
+              blurRadius: isMobile ? 8 : 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: BorderRadius.horizontal(
+                left: Radius.circular(isMobile ? 16 : 20),
+              ),
+              child: CachedNetworkImage(
+                imageUrl: food.imageUrl,
+                width: isMobile ? 120 : 140,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  color: Colors.grey[900],
+                  child: const Center(
+                    child: CircularProgressIndicator(color: AppColors.gold),
+                  ),
+                ),
+              ),
+            ),
+            
+            // Details
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(isMobile ? 12 : 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                food.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isMobile ? 14 : 16,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isMobile ? 6 : 8,
+                                vertical: isMobile ? 3 : 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.star, color: AppColors.gold, size: isMobile ? 10 : 12),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    food.rating.toString(),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: isMobile ? 10 : 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: isMobile ? 4 : 6),
+                        Text(
+                          food.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.textGrey,
+                            fontSize: isMobile ? 11 : 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           _formatCurrency(food.price),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.gold,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: isMobile ? 14 : 16,
                           ),
                         ),
+                        
+                        // Add Button
                         if (qty == 0)
-                          GestureDetector(
-                            onTap: () => _incrementItem(food),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
+                          Container(
+                            height: isMobile ? 32 : 36,
+                            padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [AppColors.gold, AppColors.gold.withOpacity(0.8)],
                               ),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: AppColors.gold),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                'ADD',
-                                style: TextStyle(
-                                  color: AppColors.gold,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => _incrementItem(food),
+                                borderRadius: BorderRadius.circular(10),
+                                child: Center(
+                                  child: Text(
+                                    'ADD',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: isMobile ? 11 : 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
                           )
                         else
                           Container(
-                            height: 30,
+                            height: isMobile ? 32 : 36,
                             decoration: BoxDecoration(
-                              color: AppColors.gold,
-                              borderRadius: BorderRadius.circular(20),
+                              gradient: LinearGradient(
+                                colors: [AppColors.gold, AppColors.gold.withOpacity(0.8)],
+                              ),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 30,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.remove,
-                                    size: 16,
+                                  padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 10),
+                                  constraints: const BoxConstraints(),
+                                  icon: Icon(
+                                    Icons.remove_rounded,
+                                    size: isMobile ? 16 : 18,
                                     color: Colors.black,
                                   ),
                                   onPressed: () => _decrementItem(food),
                                 ),
-                                Text(
-                                  '$qty',
-                                  style: const TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 10),
+                                  child: Text(
+                                    '$qty',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: isMobile ? 12 : 14,
+                                    ),
                                   ),
                                 ),
                                 IconButton(
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 30,
-                                  ),
-                                  icon: const Icon(
-                                    Icons.add,
-                                    size: 16,
+                                  padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 10),
+                                  constraints: const BoxConstraints(),
+                                  icon: Icon(
+                                    Icons.add_rounded,
+                                    size: isMobile ? 16 : 18,
                                     color: Colors.black,
                                   ),
                                   onPressed: () => _incrementItem(food),
@@ -557,7 +1021,7 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
     );
   }
 
-  Widget _buildFloatingCart() {
+  Widget _buildFloatingCart(bool isMobile) {
     return GestureDetector(
       onTap: () {
         final List<Map<String, dynamic>> checkoutItems = [];
@@ -576,18 +1040,18 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
         }
       },
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isMobile ? 16 : 20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [AppColors.gold, Color(0xFFF4D03F)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(isMobile ? 20 : 25),
           boxShadow: [
             BoxShadow(
-              color: AppColors.gold.withOpacity(0.4),
-              blurRadius: 20,
+              color: AppColors.gold.withOpacity(0.5),
+              blurRadius: isMobile ? 20 : 25,
               offset: const Offset(0, 10),
             ),
           ],
@@ -595,18 +1059,18 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(isMobile ? 8 : 10),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.shopping_bag,
+              child: Icon(
+                Icons.shopping_bag_rounded,
                 color: Colors.black,
-                size: 24,
+                size: isMobile ? 20 : 24,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: isMobile ? 12 : 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -614,23 +1078,28 @@ class _FoodOrderPageState extends State<FoodOrderPage> {
                 children: [
                   Text(
                     '${_getTotalItems()} Items',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.black87,
                       fontWeight: FontWeight.w600,
+                      fontSize: isMobile ? 11 : 13,
                     ),
                   ),
                   Text(
                     _formatCurrency(_getTotalPrice()),
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.black,
-                      fontSize: 18,
+                      fontSize: isMobile ? 16 : 18,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_rounded, color: Colors.black),
+            Icon(
+              Icons.arrow_forward_rounded,
+              color: Colors.black,
+              size: isMobile ? 24 : 28,
+            ),
           ],
         ),
       ),

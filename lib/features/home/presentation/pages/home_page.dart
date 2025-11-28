@@ -148,10 +148,11 @@ class HomePage extends StatelessWidget {
 
   Widget _buildAdsCarousel(BuildContext context, {required bool isMobile}) {
     final List<String> adImages = [
-      'https://via.placeholder.com/600x350/9C27B0/FFFFFF?text=Iklan+Satu',
-      'https://via.placeholder.com/600x350/2E7D32/FFFFFF?text=Iklan+Dua',
-      'https://via.placeholder.com/600x350/9C27B0/FFFFFF?text=Iklan+Tiga',
-      'https://via.placeholder.com/600x350/BF360C/FFFFFF?text=Iklan+Empat',
+      'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1594908900066-3f47337549d8?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1478720568477-152d9b164e26?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=800&auto=format&fit=crop',
     ];
     
     final double itemsPerView = isMobile ? 1.0 : 3.0;
@@ -272,7 +273,7 @@ class HomePage extends StatelessWidget {
                               );
                             }
 
-                            String location = ''; // Default
+                            String location = 'Madiun'; // Default
                             if (snapshot.hasData && snapshot.data!.exists) {
                               final data =
                                   snapshot.data!.data() as Map<String, dynamic>?;
@@ -366,7 +367,7 @@ class HomePage extends StatelessWidget {
         const SizedBox(width: 12.0),
         _CategoryIcon(
           icon: Icons.fastfood_outlined,
-          label: 'm.food',
+          label: 'Food',
           onTap: () => context.push('/food'),
         ),
         const SizedBox(width: 12.0),

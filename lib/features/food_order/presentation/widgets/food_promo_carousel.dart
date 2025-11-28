@@ -7,22 +7,32 @@ class FoodPromoCarousel extends StatelessWidget {
   const FoodPromoCarousel({super.key});
 
   final List<String> promoImages = const [
-    'https://images.unsplash.com/photo-1585647347384-2593bc35786b?q=80&w=1000&auto=format&fit=crop', // Combo
-    'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=1000&auto=format&fit=crop', // Drink
-    'https://images.unsplash.com/photo-1621996666870-45a962702182?q=80&w=1000&auto=format&fit=crop', // Burger/Snack
+    'https://images.unsplash.com/photo-1578849278619-e73505e9610f?q=80&w=1000&auto=format&fit=crop', // Popcorn combo
+    'https://images.unsplash.com/photo-1585647347384-2593bc35786b?q=80&w=1000&auto=format&fit=crop', // Caramel popcorn
+    'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?q=80&w=1000&auto=format&fit=crop', // Drinks
+    'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?q=80&w=1000&auto=format&fit=crop', // Nachos
+    'https://images.unsplash.com/photo-1612392166686-ee72bc828089?q=80&w=1000&auto=format&fit=crop', // Hot dog
   ];
 
   @override
   Widget build(BuildContext context) {
-    return CarouselSlider(
-      options: CarouselOptions(
-        height: 180.0,
-        autoPlay: true,
-        enlargeCenterPage: true,
-        aspectRatio: 16 / 9,
-        viewportFraction: 0.85,
-      ),
-      items: promoImages.map((url) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: isMobile ? double.infinity : 1200,
+        ),
+        child: CarouselSlider(
+          options: CarouselOptions(
+            height: isMobile ? 180.0 : 200.0,
+            autoPlay: true,
+            enlargeCenterPage: true,
+            aspectRatio: 16 / 9,
+            viewportFraction: isMobile ? 0.85 : 0.6,
+          ),
+          items: promoImages.map((url) {
         return Builder(
           builder: (BuildContext context) {
             return Container(
@@ -98,6 +108,8 @@ class FoodPromoCarousel extends StatelessWidget {
           },
         );
       }).toList(),
+        ),
+      ),
     );
   }
 }

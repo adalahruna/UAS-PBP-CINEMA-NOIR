@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 
 // CARA MENGGUNAKAN:
@@ -35,7 +36,7 @@ class FoodPromoSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Yuk, nyemil di m.food',
+                      'Yuk, nyemil ',
                       style: TextStyle(
                         color: AppColors.gold,
                         fontSize: 18,
@@ -52,8 +53,7 @@ class FoodPromoSection extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  // TODO: Navigate to all promos page
-                  print('Navigasi ke semua promo m.food');
+                  context.push('/food');
                 },
                 child: const Text(
                   'Lihat semua >',
@@ -74,8 +74,7 @@ class FoodPromoSection extends StatelessWidget {
         Center(
           child: ElevatedButton(
             onPressed: () {
-              // TODO: Navigate to m.food page
-              print('Navigasi ke m.food');
+              context.push('/food');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.darkGrey,
@@ -87,7 +86,7 @@ class FoodPromoSection extends StatelessWidget {
               ),
             ),
             child: const Text(
-              'Pesen m.food',
+              'Pesen Makanan yuk',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
@@ -97,31 +96,47 @@ class FoodPromoSection extends StatelessWidget {
   }
 
   Widget _buildPromoCarousel(BuildContext context, {required bool isMobile}) {
-    // Data promo makanan (sesuai dengan referensi gambar)
+    // Data promo makanan dengan gambar network yang menarik
     final List<FoodPromo> promos = [
       FoodPromo(
-        title: 'GLINDA Light-Up Popcorn Bucket',
-        subtitle: 'Wicked The Movie',
+        title: 'Combo Popcorn Spesial',
+        subtitle: 'Promo Hari Ini',
         imageUrl:
-            'https://via.placeholder.com/400x250/1B5E20/FFFFFF?text=Glinda+Popcorn+Bucket',
-        badge: '450k',
-        releaseDate: 'In Cinemas 19 November 2025',
+            'https://images.unsplash.com/photo-1578849278619-e73505e9610f?q=80&w=800&auto=format&fit=crop',
+        badge: 'Hemat 30%',
+        releaseDate: 'Berlaku sampai akhir bulan',
       ),
       FoodPromo(
         title: 'Cashback 25%',
-        subtitle: 'Pakai Kartu XXI',
+        subtitle: 'Pakai Kartu Kredit',
         imageUrl:
-            'https://via.placeholder.com/400x250/0277BD/FFFFFF?text=Cashback+25%25',
+            'https://images.unsplash.com/photo-1585647347384-2593bc35786b?q=80&w=800&auto=format&fit=crop',
         badge: 'Max 50k',
         releaseDate: null,
       ),
       FoodPromo(
-        title: 'Jajan Hemat Reward Nikmat',
-        subtitle: 'XXI Rewards',
+        title: 'Beli 2 Gratis 1',
+        subtitle: 'Minuman Dingin',
         imageUrl:
-            'https://via.placeholder.com/400x250/6A1B9A/FFFFFF?text=XXI+Rewards',
-        badge: 'Cashback',
+            'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?q=80&w=800&auto=format&fit=crop',
+        badge: 'Promo',
         releaseDate: null,
+      ),
+      FoodPromo(
+        title: 'Nachos Cheese Combo',
+        subtitle: 'Menu Favorit',
+        imageUrl:
+            'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?q=80&w=800&auto=format&fit=crop',
+        badge: 'Best Seller',
+        releaseDate: null,
+      ),
+      FoodPromo(
+        title: 'Hot Dog Spesial',
+        subtitle: 'Paket Lengkap',
+        imageUrl:
+            'https://images.unsplash.com/photo-1612392166686-ee72bc828089?q=80&w=800&auto=format&fit=crop',
+        badge: 'New',
+        releaseDate: 'Menu baru tersedia',
       ),
     ];
 
