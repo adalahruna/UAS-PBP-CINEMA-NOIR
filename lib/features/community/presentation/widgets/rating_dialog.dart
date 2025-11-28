@@ -170,6 +170,7 @@ class _RatingDialogState extends State<RatingDialog> {
         Center(
           child: Column(
             children: [
+              // First row - 5 stars
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(5, (index) {
@@ -180,15 +181,34 @@ class _RatingDialogState extends State<RatingDialog> {
                       child: Icon(
                         index < _rating ? Icons.star : Icons.star_border,
                         color: AppColors.gold,
-                        size: 40,
+                        size: 36,
                       ),
                     ),
                   );
                 }),
               ),
               const SizedBox(height: 8),
+              // Second row - 5 stars (6-10)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  final starIndex = index + 5;
+                  return GestureDetector(
+                    onTap: () => setState(() => _rating = starIndex + 1.0),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        starIndex < _rating ? Icons.star : Icons.star_border,
+                        color: AppColors.gold,
+                        size: 36,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 12),
               Text(
-                _getRatingText(_rating),
+                '${_rating.toInt()}/10 - ${_getRatingText(_rating)}',
                 style: const TextStyle(
                   color: AppColors.gold,
                   fontSize: 16,
@@ -303,15 +323,25 @@ class _RatingDialogState extends State<RatingDialog> {
   String _getRatingText(double rating) {
     switch (rating.toInt()) {
       case 1:
-        return 'Terrible';
+        return 'Awful';
       case 2:
-        return 'Poor';
+        return 'Terrible';
       case 3:
-        return 'Average';
+        return 'Very Bad';
       case 4:
-        return 'Good';
+        return 'Bad';
       case 5:
+        return 'Below Average';
+      case 6:
+        return 'Average';
+      case 7:
+        return 'Good';
+      case 8:
+        return 'Very Good';
+      case 9:
         return 'Excellent';
+      case 10:
+        return 'Masterpiece';
       default:
         return 'Rate this movie';
     }

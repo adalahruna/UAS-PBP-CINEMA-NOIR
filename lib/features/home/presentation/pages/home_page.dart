@@ -320,12 +320,10 @@ class HomePage extends StatelessWidget {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.local_offer_outlined,
+                icon: const Icon(Icons.shopping_bag_outlined,
                     color: AppColors.textWhite),
-                tooltip: 'Promo',
-                onPressed: () {
-                  print('Promo icon pressed!');
-                },
+                tooltip: 'My Orders',
+                onPressed: () => context.push('/my-orders'),
               ),
               IconButton(
                 icon: const Icon(Icons.person_outline, color: AppColors.gold),

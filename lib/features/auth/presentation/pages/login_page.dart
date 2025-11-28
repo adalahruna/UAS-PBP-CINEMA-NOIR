@@ -66,17 +66,69 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         if (state is Unauthenticated) {
-          if (ModalRoute.of(context)?.isCurrent != true) {
+          // Tutup loading dialog jika ada
+          if (Navigator.canPop(context)) {
             Navigator.of(context, rootNavigator: true).pop();
           }
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                state.message ?? 'Login Gagal. Cek email/password.',
-              ),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
+          
+          // Tunggu sebentar agar loading dialog tertutup dulu
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (context.mounted) {
+              // Cek apakah pesan tentang verifikasi
+              final isVerificationIssue = state.message?.toLowerCase().contains('verifikasi') ?? false;
+              
+              showDialog(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  backgroundColor: AppColors.darkGrey,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Row(
+                    children: [
+                      Icon(
+                        isVerificationIssue ? Icons.email_outlined : Icons.error,
+                        color: isVerificationIssue ? Colors.orange : Colors.red,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          isVerificationIssue ? 'Verifikasi Diperlukan' : 'Login Gagal',
+                          style: TextStyle(
+                            color: isVerificationIssue ? Colors.orange : Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  content: Text(
+                    state.message ?? 'Login Gagal. Cek email/password.',
+                    style: const TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 15,
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      child: const Text(
+                        'OK',
+                        style: TextStyle(
+                          color: AppColors.gold,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          });
         }
 
         if (state is Authenticated) {

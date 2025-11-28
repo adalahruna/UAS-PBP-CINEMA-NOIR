@@ -31,7 +31,7 @@ class AuthCubit extends Cubit<AuthState> {
         // Cek apakah email sudah diverifikasi
         if (!user.emailVerified) {
            emit(const Unauthenticated(
-             message: 'Email belum diverifikasi. Silakan cek inbox email Anda.'
+             message: 'Email belum diverifikasi. Silakan cek inbox email Anda untuk verifikasi.'
            ));
            await _auth.signOut(); // Logout paksa jika belum verifikasi
         } else {
@@ -39,9 +39,30 @@ class AuthCubit extends Cubit<AuthState> {
         }
       }
     } on FirebaseAuthException catch (e) {
-      emit(Unauthenticated(message: e.message ?? 'Login gagal'));
+      // Handle specific error codes
+      String errorMessage;
+      switch (e.code) {
+        case 'user-not-found':
+          errorMessage = 'Email tidak terdaftar. Silakan daftar terlebih dahulu.';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Password salah. Silakan coba lagi.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Format email tidak valid.';
+          break;
+        case 'user-disabled':
+          errorMessage = 'Akun ini telah dinonaktifkan.';
+          break;
+        case 'invalid-credential':
+          errorMessage = 'Email atau password salah. Silakan coba lagi.';
+          break;
+        default:
+          errorMessage = e.message ?? 'Login gagal. Silakan coba lagi.';
+      }
+      emit(Unauthenticated(message: errorMessage));
     } catch (e) {
-      emit(Unauthenticated(message: e.toString()));
+      emit(Unauthenticated(message: 'Terjadi kesalahan. Silakan coba lagi.'));
     }
   }
 
@@ -50,7 +71,6 @@ class AuthCubit extends Cubit<AuthState> {
     required String email,
     required String password,
     required String fullName,
-    String province = 'Jawa Timur',
     String city = 'Madiun',
   }) async {
     try {
@@ -70,7 +90,6 @@ class AuthCubit extends Cubit<AuthState> {
         await _saveUserToFirestore(
           user: user,
           fullName: fullName,
-          province: province,
           city: city,
         );
 
@@ -81,13 +100,27 @@ class AuthCubit extends Cubit<AuthState> {
         await _auth.signOut();
         
         emit(const Unauthenticated(
-          message: 'Registrasi Berhasil! Silakan cek email untuk verifikasi sebelum login.',
+          message: 'Verifikasi email berhasil dikirim! Silakan cek inbox email Anda dan klik link verifikasi sebelum login.',
         ));
       }
     } on FirebaseAuthException catch (e) {
-      emit(Unauthenticated(message: e.message ?? 'Registrasi gagal'));
+      String errorMessage;
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage = 'Email sudah terdaftar. Silakan gunakan email lain atau login.';
+          break;
+        case 'weak-password':
+          errorMessage = 'Password terlalu lemah. Gunakan minimal 8 karakter dengan angka.';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Format email tidak valid.';
+          break;
+        default:
+          errorMessage = e.message ?? 'Registrasi gagal. Silakan coba lagi.';
+      }
+      emit(Unauthenticated(message: errorMessage));
     } catch (e) {
-      emit(Unauthenticated(message: e.toString()));
+      emit(Unauthenticated(message: 'Terjadi kesalahan. Silakan coba lagi.'));
     }
   }
 
@@ -167,7 +200,6 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> _saveUserToFirestore({
     required User user,
     required String fullName,
-    String province = 'Jawa Timur',
     String city = 'Madiun',
   }) async {
     try {
@@ -175,7 +207,6 @@ class AuthCubit extends Cubit<AuthState> {
         'uid': user.uid,
         'email': user.email,
         'fullName': fullName,
-        'province': province,
         'city': city,
         'photoUrl': '',
         'createdAt': FieldValue.serverTimestamp(),

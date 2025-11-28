@@ -21,7 +21,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPassController = TextEditingController();
-  final _provinceController = TextEditingController();
   final _cityController = TextEditingController();
   
   bool _obscurePass = true;
@@ -34,7 +33,6 @@ class _RegisterPageState extends State<RegisterPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPassController.dispose();
-    _provinceController.dispose();
     _cityController.dispose();
     super.dispose();
   }
@@ -51,7 +49,6 @@ class _RegisterPageState extends State<RegisterPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
-        province: _provinceController.text.trim(),
         city: _cityController.text.trim(),
       );
     }
@@ -77,18 +74,73 @@ class _RegisterPageState extends State<RegisterPage> {
             );
           } else if (state is Unauthenticated) {
             // Tutup dialog loading jika ada
-            if (Navigator.canPop(context)) Navigator.pop(context);
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
             
-            final isSuccess = state.message?.toLowerCase().contains('berhasil') ?? false;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message ?? 'Error'),
-                backgroundColor: isSuccess ? Colors.green : Colors.red,
-              ),
-            );
-
-            // Jika sukses register, arahkan kembali ke login
-            if (isSuccess) context.go('/login');
+            // Tunggu sebentar agar loading dialog tertutup dulu
+            Future.delayed(const Duration(milliseconds: 100), () {
+              if (context.mounted) {
+                final isSuccess = state.message?.toLowerCase().contains('verifikasi') ?? false;
+                
+                // Show dialog instead of snackbar for better visibility
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (dialogContext) => AlertDialog(
+                    backgroundColor: AppColors.darkGrey,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    title: Row(
+                      children: [
+                        Icon(
+                          isSuccess ? Icons.mark_email_read : Icons.error,
+                          color: isSuccess ? Colors.green : Colors.red,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            isSuccess ? 'Registrasi Berhasil!' : 'Registrasi Gagal',
+                            style: TextStyle(
+                              color: isSuccess ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    content: Text(
+                      state.message ?? 'Error',
+                      style: const TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 15,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          if (isSuccess) context.go('/login');
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        ),
+                        child: Text(
+                          isSuccess ? 'Ke Halaman Login' : 'OK',
+                          style: const TextStyle(
+                            color: AppColors.gold,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            });
           }
         },
         child: Center(
@@ -122,18 +174,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email)),
                       validator: (v) => (!v!.contains('@') || !v.contains('.')) ? 'Format email salah' : null,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Provinsi
-                    TextFormField(
-                      controller: _provinceController,
-                      decoration: const InputDecoration(
-                        labelText: 'Provinsi',
-                        prefixIcon: Icon(Icons.map),
-                        hintText: 'Contoh: Jawa Timur',
-                      ),
-                      validator: (v) => v!.isEmpty ? 'Provinsi wajib diisi' : null,
                     ),
                     const SizedBox(height: 16),
 

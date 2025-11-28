@@ -227,7 +227,9 @@ class AppRouter {
 
     // --- LOGIKA REDIRECT ---
     redirect: (BuildContext context, GoRouterState state) {
-      final bool isLoggedIn = (FirebaseAuth.instance.currentUser != null);
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final bool isLoggedIn = currentUser != null;
+      final bool isVerified = currentUser?.emailVerified ?? false;
       final String location = state.matchedLocation;
       final bool isAuthPage = (location == '/login' || location == '/register');
       final bool isSplashPage = location == '/splash';
@@ -237,7 +239,7 @@ class AppRouter {
       }
 
       if (_splashShown && isSplashPage) {
-        return isLoggedIn ? '/' : '/login';
+        return (isLoggedIn && isVerified) ? '/' : '/login';
       }
 
       if (!isLoggedIn && !isSplashPage) {
@@ -246,7 +248,15 @@ class AppRouter {
         }
       }
 
-      if (isLoggedIn && !isSplashPage) {
+      // Jika user login tapi belum verifikasi, tetap di auth page
+      if (isLoggedIn && !isVerified && !isSplashPage) {
+        if (!isAuthPage) {
+          return '/login';
+        }
+      }
+
+      // Jika user sudah login dan verified, redirect dari auth page ke home
+      if (isLoggedIn && isVerified && !isSplashPage) {
         if (isAuthPage) {
           return '/';
         }
