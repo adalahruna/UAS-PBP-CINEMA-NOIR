@@ -118,7 +118,7 @@ class HomePage extends StatelessWidget {
 
                       const SizedBox(height: 40.0),
                       
-                      _buildFooter(),
+                      _buildFooter(context),
                     ],
                   ),
                 );
@@ -414,7 +414,7 @@ class HomePage extends StatelessWidget {
     );
   }
   
-  Widget _buildFooter() {
+  Widget _buildFooter(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
@@ -439,23 +439,79 @@ class HomePage extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Profile', style: TextStyle(color: AppColors.textWhite, fontSize: 16)),
-                  SizedBox(height: 12.0),
-                  Text('Careers', style: TextStyle(color: AppColors.textWhite, fontSize: 16)),
-                  SizedBox(height: 12.0),
-                  Text('Contact Us', style: TextStyle(color: AppColors.textWhite, fontSize: 16)),
+                  GestureDetector(
+                    onTap: () => context.push('/profile'),
+                    child: const Text(
+                      'Profile',
+                      style: TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  GestureDetector(
+                    onTap: () => context.push('/about'),
+                    child: const Text(
+                      'About Us',
+                      style: TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  const Text(
+                    'Careers',
+                    style: TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  const Text(
+                    'Contact Us',
+                    style: TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Follow Us', style: TextStyle(color: AppColors.textWhite, fontSize: 16)),
-                  SizedBox(height: 12.0),
-                  Text('Facebook', style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
-                  SizedBox(height: 8.0),
-                  Text('Instagram', style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
-                  SizedBox(height: 8.0),
-                  Text('X (Twitter)', style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
+                  const Text(
+                    'Follow Us',
+                    style: TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 12.0),
+                  const Text(
+                    'Facebook',
+                    style: TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  const Text(
+                    'Instagram',
+                    style: TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  const Text(
+                    'X (Twitter)',
+                    style: TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
             ],

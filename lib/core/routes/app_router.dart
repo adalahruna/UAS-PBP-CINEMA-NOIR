@@ -15,6 +15,7 @@ import 'package:cinema_noir/features/splash/presentation/pages/splash_screen.dar
 import 'package:cinema_noir/features/cinemas/presentation/pages/cinemas_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/my_orders_page.dart';
 import 'package:cinema_noir/features/home/presentation/pages/profile_page.dart';
+import 'package:cinema_noir/features/home/presentation/pages/about_us_page.dart';
 
 // --- Import Fitur m.food ---
 import 'package:cinema_noir/features/food_order/presentation/pages/food_order_page.dart';
@@ -191,6 +192,11 @@ class AppRouter {
           GoRoute(
             path: 'profile',
             builder: (context, state) => const ProfilePage(),
+          ),
+
+          GoRoute(
+            path: 'about',
+            builder: (context, state) => const AboutUsPage(),
           ),
 
           // 6. FOOD ORDER
