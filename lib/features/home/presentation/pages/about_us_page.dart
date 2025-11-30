@@ -1,6 +1,6 @@
+import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutUsPage extends StatelessWidget {
@@ -11,51 +11,59 @@ class AboutUsPage extends StatelessWidget {
     TeamMember(
       name: 'Dhava Gilang Ramadhan',
       role: 'Ketua Kelompok',
-      imageUrl: 'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/bb8IldUR4YVMeKdzJOLHGFpgX0N2_1763718126626.jpg',
+      imageUrl:
+          'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/bb8IldUR4YVMeKdzJOLHGFpgX0N2_1763718126626.jpg',
       githubUrl: 'https://github.com/dava2532006',
-      description: 'Cita-cita saya adalah menjadi orang yang menagih pajak bukan membayarnya',
+      description:
+          'Cita-cita saya adalah menjadi orang yang menagih pajak bukan membayarnya',
     ),
     TeamMember(
       name: 'Sattya Runa Pramudita',
       role: 'Anggota',
-      imageUrl: 'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/WhatsApp%20Image%202025-11-29%20at%2009.41.22_b45b46fe.jpg',
+      imageUrl:
+          'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/WhatsApp%20Image%202025-11-29%20at%2009.41.22_b45b46fe.jpg',
       githubUrl: 'https://github.com/adalahruna',
       description: 'Kudu aku sek to',
     ),
     TeamMember(
       name: 'Rahmat Nugroho Saputra',
       role: 'Anggota',
-      imageUrl: 'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/IMG_20250906_175207.jpg',
+      imageUrl:
+          'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/IMG_20250906_175207.jpg',
       githubUrl: 'https://github.com/rahmatnug',
       description: 'Semoga yang kali ini berhasil',
-    ),  
+    ),
     TeamMember(
-      name: 'Fiz dien al gifari',
+      name: 'Faiz Ahmad Dien Al-Ghifary',
       role: 'Anggota',
-      imageUrl: 'https://ui-avatars.com/api/?name=Budi+Santoso&size=400&background=D4AF37&color=121212&bold=true&format=png',
-      githubUrl: 'https://github.com/bsantoso',
-      description: 'Creating responsive and interactive UIs',
+      imageUrl:
+          'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/Gambar%20WhatsApp%202025-11-29%20pukul%2023.49.23_7985ab3c.jpg',
+      githubUrl: 'https://github.com/Paizzy',
+      description: 'Tidur Di Masjid ada Pragos, Hai Aku Faos',
     ),
     TeamMember(
       name: 'Desinta Dian Kusumaningrum',
-      role: 'Raja laporan',
-      imageUrl: 'https://ui-avatars.com/api/?name=Citra+Dewi&size=400&background=D4AF37&color=121212&bold=true&format=png',
+      role: 'Anggota',
+      imageUrl:
+          'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/Gambar%20WhatsApp%202025-11-29%20pukul%2023.32.34_5a5106fd.jpg',
       githubUrl: 'https://github.com/dysee-xian',
-      description: 'Building cross-platform mobile apps',
+      description: 'were dreaming of tommorow isnt coming',
     ),
     TeamMember(
-      name: 'Dewa Nazwa Putramarna',
-      role: 'DevOps Engineer',
-      imageUrl: 'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/WhatsApp%20Image%202025-11-29%20at%2009.54.35_ddb54d1a.jpg',
+      name: 'Dewa Nazwa Marna Putra',
+      role: 'Anggota',
+      imageUrl:
+          'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/WhatsApp%20Image%202025-11-29%20at%2009.54.35_ddb54d1a.jpg',
       githubUrl: ' https://github.com/Marzzzz-bot',
-      description: 'Managing deployment and infrastructure',
+      description: 'Aku mah apa atuh',
     ),
     TeamMember(
-      name: 'Della',
-      role: 'QA Engineer',
-      imageUrl: 'https://ui-avatars.com/api/?name=Eka+Putri&size=400&background=D4AF37&color=121212&bold=true&format=png',
-      githubUrl: 'https://github.com/eputri',
-      description: 'Ensuring quality and testing excellence',
+      name: 'Della Nur Laili',
+      role: 'Anggota',
+      imageUrl:
+          'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/Gambar%20WhatsApp%202025-11-29%20pukul%2023.32.50_257ab539.jpg',
+      githubUrl: 'https://github.com/dellanrl',
+      description: 'kalau bukan sekarang kapan lagi',
     ),
   ];
 
@@ -92,7 +100,10 @@ class AboutUsPage extends StatelessWidget {
             flexibleSpace: FlexibleSpaceBar(
               centerTitle: true,
               title: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.black.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(20),
@@ -114,10 +125,7 @@ class AboutUsPage extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          AppColors.darkGrey,
-                          AppColors.darkBackground,
-                        ],
+                        colors: [AppColors.darkGrey, AppColors.darkBackground],
                       ),
                     ),
                   ),
@@ -182,10 +190,7 @@ class AboutUsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.darkGrey,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.gold.withOpacity(0.3),
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.gold.withOpacity(0.3), width: 1),
         boxShadow: [
           BoxShadow(
             color: AppColors.gold.withOpacity(0.1),
@@ -275,10 +280,14 @@ class AboutUsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamGrid(BuildContext context, double screenWidth, bool isMobile) {
+  Widget _buildTeamGrid(
+    BuildContext context,
+    double screenWidth,
+    bool isMobile,
+  ) {
     int crossAxisCount;
     double childAspectRatio;
-    
+
     if (screenWidth > 1200) {
       crossAxisCount = 4;
       childAspectRatio = 0.75;
@@ -304,10 +313,7 @@ class AboutUsPage extends StatelessWidget {
       ),
       itemCount: teamMembers.length,
       itemBuilder: (context, index) {
-        return _TeamMemberCard(
-          member: teamMembers[index],
-          isMobile: isMobile,
-        );
+        return _TeamMemberCard(member: teamMembers[index], isMobile: isMobile);
       },
     );
   }
@@ -321,11 +327,7 @@ class AboutUsPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Icon(
-            Icons.favorite,
-            color: AppColors.gold,
-            size: 32,
-          ),
+          const Icon(Icons.favorite, color: AppColors.gold, size: 32),
           const SizedBox(height: 12),
           Text(
             'Made with passion by Kelompok 1',
@@ -371,10 +373,7 @@ class _TeamMemberCard extends StatefulWidget {
   final TeamMember member;
   final bool isMobile;
 
-  const _TeamMemberCard({
-    required this.member,
-    required this.isMobile,
-  });
+  const _TeamMemberCard({required this.member, required this.isMobile});
 
   @override
   State<_TeamMemberCard> createState() => _TeamMemberCardState();
@@ -477,7 +476,7 @@ class _TeamMemberCardState extends State<_TeamMemberCard> {
                   ],
                 ),
               ),
-              
+
               // Info Section
               Expanded(
                 flex: 4,
@@ -528,9 +527,9 @@ class _TeamMemberCardState extends State<_TeamMemberCard> {
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       // GitHub Button
                       SizedBox(
                         height: widget.isMobile ? 36 : 40,
@@ -547,7 +546,10 @@ class _TeamMemberCardState extends State<_TeamMemberCard> {
                               horizontal: widget.isMobile ? 12 : 16,
                             ),
                           ),
-                          icon: Icon(Icons.code, size: widget.isMobile ? 16 : 18),
+                          icon: Icon(
+                            Icons.code,
+                            size: widget.isMobile ? 16 : 18,
+                          ),
                           label: Text(
                             'GitHub',
                             style: TextStyle(
