@@ -124,7 +124,7 @@ class SeatSelectionPage extends StatelessWidget {
                           ),
                         ),
                         // Add padding at bottom for checkout widget
-                        const SizedBox(height: 100), 
+                        const SizedBox(height: 80), 
                       ],
                     ),
                     if (state.selectedSeats.isNotEmpty)
@@ -169,7 +169,7 @@ class _SeatSelectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.fromLTRB(24, 55, 24, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -181,21 +181,26 @@ class _SeatSelectionHeader extends StatelessWidget {
                   title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     height: 1.2,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     const Icon(Icons.calendar_today, size: 14, color: AppColors.gold),
                     const SizedBox(width: 6),
-                    Text(
-                      '$date • $time',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
+                    Expanded(
+                      child: Text(
+                        '$date • $time',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

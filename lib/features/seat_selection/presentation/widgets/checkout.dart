@@ -28,7 +28,7 @@ class Checkout extends StatelessWidget {
     final totalPrice = selectedSeats.length * pricePerSeat;
 
     return Container(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
       decoration: BoxDecoration(
         color: const Color(0xFF252525),
         borderRadius: const BorderRadius.only(
@@ -37,9 +37,9 @@ class Checkout extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, -3),
           ),
         ],
       ),
@@ -51,27 +51,32 @@ class Checkout extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${selectedSeats.length} Seats Selected',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${selectedSeats.length} Seats Selected',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      selectedSeats.join(', '),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 4),
+                      Text(
+                        selectedSeats.join(', '),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -95,7 +100,7 @@ class Checkout extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 24.0),
+            const SizedBox(height: 12.0),
             ElevatedButton(
               onPressed: () {
                 final seatSelectionCubit = context.read<SeatSelectionCubit>();

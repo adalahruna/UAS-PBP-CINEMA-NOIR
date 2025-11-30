@@ -15,123 +15,126 @@ class SeatLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const rows = 10;
+    const rows = 8;
     const cols = 10;
+    const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
-    return Column(
-      children: [
-        const SizedBox(height: 20),
-        // Screen Indicator
-        CustomPaint(
-          size: const Size(300, 40),
-          painter: ScreenPainter(),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          'SCREEN',
-          style: TextStyle(
-            color: Colors.white38,
-            letterSpacing: 4,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 30),
-        
-        // Seat Grid
-        Expanded(
-          child: SingleChildScrollView(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Row Labels
-                Padding(
-                  padding: const EdgeInsets.only(top: 6, right: 16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: List.generate(rows, (rowIndex) {
-                      final rowLetter = String.fromCharCode(65 + rowIndex);
-                      return Container(
-                        height: 36, // Match grid item height + spacing
-                        alignment: Alignment.center,
-                        margin: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          rowLetter,
-                          style: const TextStyle(
-                            color: Colors.white54,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                // Seats
-                SizedBox(
-                  width: cols * 36.0, // Approximate width
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: cols,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 1.0,
-                    ),
-                    itemCount: rows * cols,
-                    itemBuilder: (context, index) {
-                      final rowIndex = index ~/ cols;
-                      final colIndex = index % cols;
-                      final rowLetter = String.fromCharCode(65 + rowIndex);
-                      final seatNumber = colIndex + 1;
-                      final seatId = '$rowLetter$seatNumber';
-
-                      final isBooked = bookedSeats.contains(seatId);
-                      final isSelected = selectedSeats.contains(seatId);
-
-                      return _SeatItem(
-                        seatId: seatId,
-                        isBooked: isBooked,
-                        isSelected: isSelected,
-                        onTap: () => onSeatSelected(seatId),
-                      );
-                    },
-                  ),
+    return Container(
+      padding: const EdgeInsets.only(bottom: 80), // Add bottom padding to prevent overlap with checkout
+      child: Column(
+        children: [
+          // Screen
+          Container(
+            margin: const EdgeInsets.only(top: 20, bottom: 30), // Increased bottom margin
+            height: 30,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
+              borderRadius: BorderRadius.circular(4),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.6),
+                  blurRadius: 15,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 8),
                 ),
               ],
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.grey[800]!,
+                  Colors.grey[900]!,
+                ],
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                'S C R E E N',
+                style: TextStyle(
+                  color: Colors.white24,
+                  letterSpacing: 8,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w900,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
             ),
           ),
-        ),
         
-        // Legend
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _LegendItem(
-                color: AppColors.darkGrey,
-                borderColor: AppColors.gold.withOpacity(0.3),
-                label: 'Available',
-              ),
-              const SizedBox(width: 20),
-              _LegendItem(
-                color: AppColors.gold,
-                borderColor: AppColors.gold,
-                label: 'Selected',
-              ),
-              const SizedBox(width: 20),
-              _LegendItem(
-                color: AppColors.lightGrey,
-                borderColor: AppColors.lightGrey,
-                label: 'Booked',
-              ),
-            ],
+        // Seat Grid with fixed height and scrollable content
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                      minWidth: constraints.maxWidth,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 20),
+                        ...List.generate(
+                          rows,
+                          (row) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Row label (A, B, C, etc.)
+                                SizedBox(
+                                  width: 30,
+                                  child: Center(
+                                    child: Text(
+                                      rowLabels[row],
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                // Seats
+                                ...List.generate(
+                                  cols,
+                                  (col) {
+                                    final seatId = '${rowLabels[row]}${col + 1}';
+                                    final isBooked = bookedSeats.contains(seatId);
+                                    final isSelected = selectedSeats.contains(seatId);
+                                    return _SeatItem(
+                                      key: ValueKey('seat_${row}_$col'),
+                                      seatId: seatId,
+                                      isBooked: isBooked,
+                                      isSelected: isSelected,
+                                      showLabel: col == 0,
+                                      onTap: isBooked ? null : () => onSeatSelected(seatId),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Extra padding at the bottom to prevent overlap with checkout bar
+                        const SizedBox(height: 120), // Increased bottom padding
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -140,147 +143,125 @@ class _SeatItem extends StatelessWidget {
   final String seatId;
   final bool isBooked;
   final bool isSelected;
-  final VoidCallback onTap;
+  final bool showLabel;
+  final VoidCallback? onTap;
 
   const _SeatItem({
+    Key? key,
     required this.seatId,
     required this.isBooked,
     required this.isSelected,
+    this.showLabel = false,
     required this.onTap,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    Color backgroundColor;
-    Color borderColor;
+    // Memoize colors to prevent unnecessary rebuilds
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // Determine colors based on seat state
+    final Color backgroundColor;
+    final Color borderColor;
     
     if (isBooked) {
-      backgroundColor = AppColors.lightGrey.withOpacity(0.3);
+      backgroundColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
       borderColor = Colors.transparent;
     } else if (isSelected) {
       backgroundColor = AppColors.gold;
       borderColor = AppColors.gold;
     } else {
-      backgroundColor = AppColors.darkGrey;
-      borderColor = AppColors.gold.withOpacity(0.3);
+      backgroundColor = isDark ? const Color(0xFF333333) : Colors.grey[200]!;
+      borderColor = isDark ? Colors.white24 : Colors.grey[400]!;
     }
 
-    return GestureDetector(
-      onTap: isBooked ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(8),
-            bottom: Radius.circular(4),
+    // Use const for static widgets and avoid rebuilding unnecessarily
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 4.0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isBooked ? null : onTap,
+          splashColor: isBooked ? null : AppColors.gold.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Seat top part
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: 28,
+                height: 24,
+                margin: const EdgeInsets.only(bottom: 2),
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(6),
+                    bottom: Radius.circular(2),
+                  ),
+                  border: Border.all(
+                    color: borderColor,
+                    width: 1.5,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppColors.gold.withOpacity(0.5),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 2),
+                          )
+                        ]
+                      : null,
+                ),
+                child: isBooked
+                    ? const Center(
+                        child: Icon(
+                          Icons.block,
+                          color: Colors.white38,
+                          size: 14,
+                        ),
+                      )
+                    : null,
+              ),
+              // Seat bottom/armrest part
+              Container(
+                width: 24,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.gold.withOpacity(0.7)
+                      : (isBooked
+                          ? (isDark ? Colors.grey[700]! : Colors.grey[300]!)
+                          : (isDark ? Colors.grey[800]! : Colors.grey[300]!)),
+                  borderRadius: BorderRadius.circular(2),
+                  boxShadow: [
+                    if (isSelected)
+                      BoxShadow(
+                        color: AppColors.gold.withOpacity(0.5),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      )
+                  ],
+                ),
+              ),
+              // Seat number (only show for first seat in row for better performance)
+              if (showLabel)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    seatId[0],
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          border: Border.all(
-            color: borderColor,
-            width: 1,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: AppColors.gold.withOpacity(0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  )
-                ]
-              : [],
         ),
-        child: isBooked
-            ? const Center(
-                child: Icon(Icons.close, color: Colors.white38, size: 14),
-              )
-            : null,
       ),
     );
   }
-}
-
-class _LegendItem extends StatelessWidget {
-  final Color color;
-  final Color borderColor;
-  final String label;
-
-  const _LegendItem({
-    required this.color,
-    required this.borderColor,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(6),
-              bottom: Radius.circular(3),
-            ),
-            border: Border.all(color: borderColor),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class ScreenPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          AppColors.gold.withOpacity(0),
-          AppColors.gold.withOpacity(0.5),
-          AppColors.gold.withOpacity(0),
-        ],
-        stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    path.moveTo(0, size.height);
-    path.quadraticBezierTo(size.width / 2, -20, size.width, size.height);
-
-    canvas.drawPath(path, paint);
-    
-    // Glow effect
-    final glowPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          AppColors.gold.withOpacity(0.2),
-          AppColors.gold.withOpacity(0.0),
-        ],
-      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
-      ..style = PaintingStyle.fill;
-      
-    final glowPath = Path();
-    glowPath.moveTo(0, size.height);
-    glowPath.quadraticBezierTo(size.width / 2, -20, size.width, size.height);
-    glowPath.close();
-    
-    canvas.drawPath(glowPath, glowPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

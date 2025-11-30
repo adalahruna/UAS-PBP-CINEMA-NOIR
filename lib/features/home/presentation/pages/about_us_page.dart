@@ -54,7 +54,7 @@ class AboutUsPage extends StatelessWidget {
       role: 'Anggota',
       imageUrl:
           'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/WhatsApp%20Image%202025-11-29%20at%2009.54.35_ddb54d1a.jpg',
-      githubUrl: ' https://github.com/Marzzzz-bot',
+      githubUrl: 'https://github.com/Marzzzz-bot',
       description: 'kita perlu sadar diri kalau tidak sadar nanti jatuh lagi',
     ),
     TeamMember(
@@ -489,6 +489,7 @@ class _TeamMemberCardState extends State<_TeamMemberCard> {
                       Flexible(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               widget.member.name,
@@ -514,15 +515,18 @@ class _TeamMemberCardState extends State<_TeamMemberCard> {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 6),
-                            Text(
-                              widget.member.description,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: AppColors.textGrey,
-                                fontSize: widget.isMobile ? 10 : 11,
+                            Expanded(
+                              child: Text(
+                                widget.member.description,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: AppColors.textGrey,
+                                  fontSize: widget.isMobile ? 10 : 11,
+                                  height: 1.3,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),

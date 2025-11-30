@@ -1,0 +1,15 @@
+Analyzing seat_selection...                                     
+
+warning - Unused import: 'package:cached_network_image/cached_network_image.dart' - lib\features\seat_selection\presentation\pages\seat_selection_page.dart:1:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\seat_selection\presentation\pages\seat_selection_page.dart:51:35 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\seat_selection\presentation\widgets\checkout.dart:15:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\seat_selection\presentation\widgets\checkout.dart:40:33 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\seat_selection\presentation\widgets\seat_layout.dart:9:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\seat_selection\presentation\widgets\seat_layout.dart:36:39 - deprecated_member_use
+  error - Expected to find ')' - lib\features\seat_selection\presentation\widgets\seat_layout.dart:137:6 - expected_token
+   info - Parameter 'key' could be a super parameter - lib\features\seat_selection\presentation\widgets\seat_layout.dart:148:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\seat_selection\presentation\widgets\seat_layout.dart:184:57 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\seat_selection\presentation\widgets\seat_layout.dart:208:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\seat_selection\presentation\widgets\seat_layout.dart:232:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\seat_selection\presentation\widgets\seat_layout.dart:240:47 - deprecated_member_use
+

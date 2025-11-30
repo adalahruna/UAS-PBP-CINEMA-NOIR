@@ -4,6 +4,112 @@ import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'package:cinema_noir/features/cinemas/data/models/cinema_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+class _CinemaImage extends StatefulWidget {
+  final String imageUrl;
+  final String fallbackUrl;
+  final double height;
+
+  const _CinemaImage({
+    Key? key,
+    required this.imageUrl,
+    required this.fallbackUrl,
+    required this.height,
+  }) : super(key: key);
+
+  @override
+  _CinemaImageState createState() => _CinemaImageState();
+}
+
+class _CinemaImageState extends State<_CinemaImage> {
+  bool _hasError = false;
+  String? _currentUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUrl = widget.imageUrl;
+  }
+
+  @override
+  void didUpdateWidget(_CinemaImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _hasError = false;
+      _currentUrl = widget.imageUrl;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CachedNetworkImage(
+      imageUrl: _currentUrl!,
+      height: widget.height,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      memCacheHeight: (widget.height * MediaQuery.of(context).devicePixelRatio).round(),
+      memCacheWidth: (MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio).round(),
+      maxHeightDiskCache: (widget.height * MediaQuery.of(context).devicePixelRatio * 1.5).round(),
+      maxWidthDiskCache: (MediaQuery.of(context).size.width * MediaQuery.of(context).devicePixelRatio * 1.5).round(),
+      fadeInDuration: const Duration(milliseconds: 300),
+      fadeInCurve: Curves.easeInOut,
+      placeholder: (context, url) => Container(
+        height: widget.height,
+        color: AppColors.darkGrey,
+        child: const Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              color: AppColors.gold,
+              strokeWidth: 2,
+            ),
+          ),
+        ),
+      ),
+      errorWidget: (context, url, error) {
+        // If we haven't tried the fallback URL yet, try it
+        if (!_hasError && _currentUrl != widget.fallbackUrl) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _hasError = true;
+                _currentUrl = widget.fallbackUrl;
+              });
+            }
+          });
+          return Container(
+            height: widget.height,
+            color: AppColors.darkGrey,
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  color: AppColors.gold,
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+          );
+        }
+        
+        // If fallback also fails, show error icon
+        return Container(
+          height: widget.height,
+          color: AppColors.darkGrey,
+          child: const Center(
+            child: Icon(
+              Icons.movie,
+              size: 50,
+              color: AppColors.gold,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class CinemaCard extends StatelessWidget {
   final CinemaModel cinema;
   final VoidCallback? onTap;
@@ -14,15 +120,6 @@ class CinemaCard extends StatelessWidget {
     this.onTap,
   });
 
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
-    if (await canLaunchUrl(launchUri)) {
-      await launchUrl(launchUri);
-    }
-  }
 
   Future<void> _openMaps(double? lat, double? lng) async {
     if (lat == null || lng == null) return;
@@ -39,10 +136,45 @@ class CinemaCard extends StatelessWidget {
     }
   }
 
+  // Fallback cinema images from Pexels (optimized and verified)
+  String _getFallbackImageUrl() {
+    final cinemaName = cinema.name.toLowerCase();
+    
+    // Use optimized image URLs with smaller size and webp format
+    if (cinemaName.contains('premiere') || cinemaName.contains('plaza')) {
+      return 'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=format&fit=crop&w=800&q=80&fm=webp';
+    } else if (cinemaName.contains('imax') || cinemaName.contains('cgv')) {
+      return 'https://images.pexels.com/photos/2608517/pexels-photo-2608517.jpeg?auto=format&fit=crop&w=800&q=80&fm=webp';
+    } else if (cinemaName.contains('dolby') || cinemaName.contains('grand')) {
+      return 'https://images.pexels.com/photos/2608519/pexels-photo-2608519.jpeg?auto=format&fit=crop&w=800&q=80&fm=webp';
+    } else {
+      // Default cinema image
+      return 'https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=format&fit=crop&w=800&q=80&fm=webp';
+    }
+  }
+  
+  // Get the actual image URL with fallback
+  String _getImageUrl() {
+    if (cinema.imageUrl?.isNotEmpty == true) {
+      try {
+        // Validate the URL format
+        final uri = Uri.tryParse(cinema.imageUrl!);
+        if (uri != null && uri.isAbsolute) {
+          return cinema.imageUrl!;
+        }
+      } catch (e) {
+        // If URL is invalid, use fallback
+        return _getFallbackImageUrl();
+      }
+    }
+    return _getFallbackImageUrl();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
+    final imageHeight = isMobile ? 180.0 : 200.0;
 
     return Container(
       margin: EdgeInsets.only(bottom: isMobile ? 16 : 0),
@@ -77,44 +209,26 @@ class CinemaCard extends StatelessWidget {
                 ),
                 child: Stack(
                   children: [
-                    cinema.imageUrl != null
-                        ? CachedNetworkImage(
-                            imageUrl: cinema.imageUrl!,
-                            height: isMobile ? 180 : 200,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              height: isMobile ? 180 : 200,
-                              color: AppColors.darkGrey,
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.gold,
-                                ),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
-                              height: isMobile ? 180 : 200,
-                              color: AppColors.darkGrey,
-                              child: const Icon(
-                                Icons.movie,
-                                size: 50,
-                                color: AppColors.gold,
-                              ),
-                            ),
-                          )
-                        : Container(
-                            height: isMobile ? 180 : 200,
-                            color: AppColors.darkGrey,
-                            child: const Icon(
-                              Icons.movie,
-                              size: 50,
-                              color: AppColors.gold,
-                            ),
-                          ),
+                    // Background fallback color
+                    Container(
+                      height: imageHeight,
+                      width: double.infinity,
+                      color: AppColors.darkGrey,
+                    ),
+                    // Optimized image with caching and error handling
+                    _CinemaImage(
+                      imageUrl: _getImageUrl(),
+                      height: imageHeight,
+                      fallbackUrl: _getFallbackImageUrl(),
+                    ),
                     // Gradient overlay
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(16),
+                            topRight: Radius.circular(16),
+                          ),
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
@@ -126,47 +240,45 @@ class CinemaCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Open badge
-                    if (cinema.isOpen)
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.green, Colors.lightGreen],
+                    // Cinema name and rating
+                    Positioned(
+                      left: 16,
+                      bottom: 16,
+                      right: 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cinema.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.green.withOpacity(0.5),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
+                          const SizedBox(height: 4),
+                          Row(
                             children: [
-                              Icon(Icons.circle, color: Colors.white, size: 8),
-                              SizedBox(width: 6),
+                              const Icon(
+                                Icons.star,
+                                color: AppColors.gold,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
                               Text(
-                                'OPEN',
-                                style: TextStyle(
+                                '${cinema.rating?.toStringAsFixed(1) ?? 'N/A'}',
+                                style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
                           ),
-                        ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               ),
@@ -285,15 +397,13 @@ class CinemaCard extends StatelessWidget {
                       ),
                     ],
 
-                    // Action Buttons
-                    const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => _makePhoneCall(cinema.phone),
-                            icon: const Icon(Icons.phone, size: 18),
-                            label: Text(isMobile ? 'Call' : 'Call Now'),
+                            onPressed: onTap,
+                            icon: const Icon(Icons.info_outline, size: 18),
+                            label: Text(isMobile ? 'Details' : 'View Details'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.gold.withOpacity(0.15),
                               foregroundColor: AppColors.gold,

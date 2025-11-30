@@ -1,0 +1,116 @@
+Analyzing cinemas...                                            
+
+warning - The value of the field '<unnamed>' isn't used - lib\features\cinemas\data\models\cinema_model.dart:3:7 - unused_field
+warning - This class (or a class that this class inherits from) is marked as '@immutable', but one or more of its instance fields aren't final: CinemaModel.name, CinemaModel.null, CinemaModel.address, CinemaModel.null, CinemaModel.city, CinemaModel.null, CinemaModel.phone, CinemaModel.null, CinemaModel.latitude, CinemaModel.null, CinemaModel.longitude, CinemaModel.null, CinemaModel.facilities, CinemaModel.null, CinemaModel.imageUrl, CinemaModel.null, CinemaModel.isOpen, CinemaModel.null, CinemaModel.openingHours, CinemaModel.null - lib\features\cinemas\data\models\cinema_model.dart:3:7 - must_be_immutable
+  error - Missing concrete implementation of 'getter abstract class Equatable.props' - lib\features\cinemas\data\models\cinema_model.dart:3:7 - non_abstract_class_inherits_abstract_member
+  error - Can't define a const constructor for a class with non-final fields - lib\features\cinemas\data\models\cinema_model.dart:17:9 - const_constructor_with_non_final_field
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:67:7 - expected_class_member
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:67:13 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:67:15 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:67:15 - strict_top_level_inference
+  error - The name 'name' is already defined - lib\features\cinemas\data\models\cinema_model.dart:67:15 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:67:15 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:68:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:68:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:68:16 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:68:16 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:68:18 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:68:18 - strict_top_level_inference
+  error - The name 'address' is already defined - lib\features\cinemas\data\models\cinema_model.dart:68:18 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:68:18 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:69:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:69:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:69:13 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:69:13 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:69:15 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:69:15 - strict_top_level_inference
+  error - The name 'city' is already defined - lib\features\cinemas\data\models\cinema_model.dart:69:15 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:69:15 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:70:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:70:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:70:14 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:70:14 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:70:16 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:70:16 - strict_top_level_inference
+  error - The name 'phone' is already defined - lib\features\cinemas\data\models\cinema_model.dart:70:16 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:70:16 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:71:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:71:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:71:17 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:71:17 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:71:19 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:71:19 - strict_top_level_inference
+  error - The name 'latitude' is already defined - lib\features\cinemas\data\models\cinema_model.dart:71:19 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:71:19 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:72:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:72:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:72:18 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:72:18 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:72:20 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:72:20 - strict_top_level_inference
+  error - The name 'longitude' is already defined - lib\features\cinemas\data\models\cinema_model.dart:72:20 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:72:20 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:73:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:73:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:73:19 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:73:19 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:73:21 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:73:21 - strict_top_level_inference
+  error - The name 'facilities' is already defined - lib\features\cinemas\data\models\cinema_model.dart:73:21 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:73:21 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:74:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:74:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:74:17 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:74:17 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:74:19 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:74:19 - strict_top_level_inference
+  error - The name 'imageUrl' is already defined - lib\features\cinemas\data\models\cinema_model.dart:74:19 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:74:19 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:75:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:75:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:75:15 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:75:15 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:75:17 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:75:17 - strict_top_level_inference
+  error - The name 'isOpen' is already defined - lib\features\cinemas\data\models\cinema_model.dart:75:17 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:75:17 - missing_const_final_var_or_type
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:76:7 - missing_identifier
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:76:7 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:76:21 - prefer_typing_uninitialized_variables
+  error - Expected a class member - lib\features\cinemas\data\models\cinema_model.dart:76:21 - expected_class_member
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:76:23 - prefer_typing_uninitialized_variables
+   info - Missing type annotation - lib\features\cinemas\data\models\cinema_model.dart:76:23 - strict_top_level_inference
+  error - The name 'openingHours' is already defined - lib\features\cinemas\data\models\cinema_model.dart:76:23 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\features\cinemas\data\models\cinema_model.dart:76:23 - missing_const_final_var_or_type
+  error - Expected to find ';' - lib\features\cinemas\data\models\cinema_model.dart:76:35 - expected_token
+   info - An uninitialized field should have an explicit type annotation - lib\features\cinemas\data\models\cinema_model.dart:77:5 - prefer_typing_uninitialized_variables
+  error - Expected an identifier - lib\features\cinemas\data\models\cinema_model.dart:77:5 - missing_identifier
+  error - Unexpected text ';' - lib\features\cinemas\data\models\cinema_model.dart:77:6 - unexpected_token
+  error - Expected a method, getter, setter or operator declaration - lib\features\cinemas\data\models\cinema_model.dart:78:3 - expected_executable
+  error - Undefined name 'id' - lib\features\cinemas\data\models\cinema_model.dart:82:9 - undefined_identifier
+  error - Undefined name 'name' - lib\features\cinemas\data\models\cinema_model.dart:83:9 - undefined_identifier
+  error - Undefined name 'address' - lib\features\cinemas\data\models\cinema_model.dart:84:9 - undefined_identifier
+  error - Undefined name 'city' - lib\features\cinemas\data\models\cinema_model.dart:85:9 - undefined_identifier
+  error - Undefined name 'phone' - lib\features\cinemas\data\models\cinema_model.dart:86:9 - undefined_identifier
+  error - Undefined name 'latitude' - lib\features\cinemas\data\models\cinema_model.dart:87:9 - undefined_identifier
+  error - Undefined name 'longitude' - lib\features\cinemas\data\models\cinema_model.dart:88:9 - undefined_identifier
+  error - Undefined name 'facilities' - lib\features\cinemas\data\models\cinema_model.dart:89:9 - undefined_identifier
+  error - Undefined name 'imageUrl' - lib\features\cinemas\data\models\cinema_model.dart:90:9 - undefined_identifier
+  error - Undefined name 'isOpen' - lib\features\cinemas\data\models\cinema_model.dart:91:9 - undefined_identifier
+  error - Undefined name 'openingHours' - lib\features\cinemas\data\models\cinema_model.dart:92:9 - undefined_identifier
+  error - Expected a method, getter, setter or operator declaration - lib\features\cinemas\data\models\cinema_model.dart:94:1 - expected_executable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\pages\cinemas_page.dart:96:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\pages\cinemas_page.dart:147:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\pages\cinemas_page.dart:263:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\pages\cinemas_page.dart:464:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\pages\cinemas_page.dart:489:52 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\cinemas\presentation\widgets\cinema_card.dart:12:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\widgets\cinema_card.dart:194:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\widgets\cinema_card.dart:199:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\widgets\cinema_card.dart:246:44 - deprecated_member_use
+   info - Unnecessary use of string interpolation - lib\features\cinemas\presentation\widgets\cinema_card.dart:280:33 - unnecessary_string_interpolations
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\widgets\cinema_card.dart:390:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\widgets\cinema_card.dart:393:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\widgets\cinema_card.dart:419:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\cinemas\presentation\widgets\cinema_map_tab.dart:110:44 - deprecated_member_use
+

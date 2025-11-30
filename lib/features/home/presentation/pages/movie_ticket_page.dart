@@ -8,6 +8,7 @@ import 'package:cinema_noir/features/home/presentation/widgets/trailer_dialog.da
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:cinema_noir/core/utils/showtime_validator.dart';
 
 class MovieTicketPage extends StatefulWidget {
   final MovieModel? movie;
@@ -712,13 +713,17 @@ class _ScheduleSection extends StatelessWidget {
                       runSpacing: 12,
                       children: times.map((time) {
                         final isSelected = selectedCinema == name && selectedTime == time;
+                        final isPast = ShowtimeValidator.isShowtimePast(availableDates[selectedDateIndex], time);
+                        
                         return GestureDetector(
-                          onTap: () => onShowtimeSelected(name, time),
+                          onTap: isPast ? null : () => onShowtimeSelected(name, time),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color: isSelected ? AppColors.gold : Colors.transparent,
+                              color: isPast 
+                                ? Colors.grey.withOpacity(0.3)
+                                : (isSelected ? AppColors.gold : Colors.transparent),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                 color: isSelected ? AppColors.gold : Colors.grey[700]!,
@@ -727,8 +732,12 @@ class _ScheduleSection extends StatelessWidget {
                             child: Text(
                               time,
                               style: TextStyle(
-                                color: isSelected ? AppColors.darkBackground : Colors.white70,
-                                fontWeight: FontWeight.w600,
+                                color: isPast
+                                  ? Colors.grey
+                                  : (isSelected ? AppColors.darkBackground : Colors.white70),
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                decoration: isPast ? TextDecoration.lineThrough : null,
                               ),
                             ),
                           ),

@@ -5,6 +5,7 @@ import 'package:cinema_noir/features/cinemas/data/models/cinema_model.dart';
 import 'package:cinema_noir/features/cinemas/presentation/cubit/cinema_cubit.dart';
 import 'package:cinema_noir/features/cinemas/presentation/cubit/cinema_state.dart';
 import 'package:cinema_noir/features/cinemas/presentation/widgets/cinema_card.dart';
+import 'package:cinema_noir/features/cinemas/presentation/widgets/cinema_map_tab.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CinemasPage extends StatefulWidget {
@@ -118,14 +119,17 @@ class _CinemasPageState extends State<CinemasPage>
                         ),
                       ),
                       const SizedBox(width: 16),
-                      Text(
-                        'CINEMAS',
-                        style: TextStyle(
-                          color: AppColors.gold,
-                          fontSize: isMobile ? 22 : 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2,
-                          fontFamily: 'Montserrat',
+                      Expanded(
+                        child: Text(
+                          'CINEMAS',
+                          style: TextStyle(
+                            color: AppColors.gold,
+                            fontSize: isMobile ? 22 : 28,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 2,
+                            fontFamily: 'Montserrat',
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const Spacer(),
@@ -425,41 +429,16 @@ class _CinemasPageState extends State<CinemasPage>
   }
 
   Widget _buildMapTab() {
-    return Container(
-      color: AppColors.darkBackground,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.map_outlined,
-              size: 80,
-              color: AppColors.gold.withOpacity(0.5),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Map View',
-              style: TextStyle(
-                color: AppColors.gold,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
-                'Interactive map view will be available soon.\nYou can use the Navigate button on each cinema card to open in Google Maps.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.textGrey,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return BlocBuilder<CinemaCubit, CinemaState>(
+      builder: (context, state) {
+        if (state is CinemaLoaded) {
+          return CinemaMapTab(cinemas: state.cinemas);
+        }
+        if (state is CinemaLoading) {
+           return const Center(child: CircularProgressIndicator(color: AppColors.gold));
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 

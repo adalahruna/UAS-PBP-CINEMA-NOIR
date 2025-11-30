@@ -12,6 +12,7 @@ class CinemaModel extends Equatable {
   final String? imageUrl;
   final bool isOpen;
   final String? openingHours;
+  final double? rating;
 
   const CinemaModel({
     required this.id,
@@ -25,6 +26,7 @@ class CinemaModel extends Equatable {
     this.imageUrl,
     this.isOpen = true,
     this.openingHours,
+    this.rating,
   });
 
   factory CinemaModel.fromJson(Map<String, dynamic> json) {
@@ -42,6 +44,7 @@ class CinemaModel extends Equatable {
       imageUrl: json['imageUrl'],
       isOpen: json['isOpen'] ?? true,
       openingHours: json['openingHours'],
+      rating: json['rating']?.toDouble(),
     );
   }
 
@@ -58,6 +61,7 @@ class CinemaModel extends Equatable {
       'imageUrl': imageUrl,
       'isOpen': isOpen,
       'openingHours': openingHours,
+      'rating': rating,
     };
   }
 
@@ -74,5 +78,6 @@ class CinemaModel extends Equatable {
         imageUrl,
         isOpen,
         openingHours,
+        rating,
       ];
 }
