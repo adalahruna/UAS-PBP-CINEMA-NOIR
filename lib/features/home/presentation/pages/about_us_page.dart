@@ -55,7 +55,7 @@ class AboutUsPage extends StatelessWidget {
       imageUrl:
           'https://msilqepklwsdvftecdov.supabase.co/storage/v1/object/public/user_profiles/WhatsApp%20Image%202025-11-29%20at%2009.54.35_ddb54d1a.jpg',
       githubUrl: ' https://github.com/Marzzzz-bot',
-      description: 'Aku mah apa atuh',
+      description: 'kita perlu sadar diri kalau tidak sadar nanti jatuh lagi',
     ),
     TeamMember(
       name: 'Della Nur Laili',
