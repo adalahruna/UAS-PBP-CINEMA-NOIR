@@ -162,7 +162,11 @@ class _ProfilePageState extends State<ProfilePage> {
         child: BlocBuilder<AuthCubit, AuthState>(
           builder: (context, state) {
             if (_isLoadingData) {
-              return const Center(child: CircularProgressIndicator(color: AppColors.gold));
+              return const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.gold,
+                ),
+              );
             }
             if (user == null) {
               return Center(
@@ -347,8 +351,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                       width: 24,
                                       height: 24,
                                       child: CircularProgressIndicator(
-                                        strokeWidth: 3,
-                                        color: AppColors.darkBackground,
+                                        color: Colors.black,
+                                        strokeWidth: 2,
                                       ),
                                     )
                                   : const Text('SAVE CHANGES'),

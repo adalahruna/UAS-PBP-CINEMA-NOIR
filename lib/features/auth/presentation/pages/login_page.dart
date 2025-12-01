@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:cinema_noir/features/auth/presentation/cubit/auth_state.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
@@ -59,8 +60,12 @@ class _LoginPageState extends State<LoginPage> {
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => const Center(
-              child: CircularProgressIndicator(color: AppColors.gold),
+            builder: (context) => Center(
+              child: LoadingAnimationWidget.flickr(
+                leftDotColor: AppColors.gold,
+                rightDotColor: Colors.black,
+                size: 50,
+              ),
             ),
           );
         }

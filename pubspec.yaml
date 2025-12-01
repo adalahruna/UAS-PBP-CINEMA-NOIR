@@ -57,6 +57,8 @@ dependencies:
   geocoding: ^3.0.0
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
+  loading_animation_widget: ^1.2.1
+  webview_flutter: ^4.10.0
 
 
   # The following adds the Cupertino Icons font to your application.

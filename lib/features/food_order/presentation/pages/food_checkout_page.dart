@@ -157,7 +157,9 @@ class _FoodCheckoutPageState extends State<FoodCheckoutPage> {
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.gold),
+              child: CircularProgressIndicator(
+                color: AppColors.gold,
+              ),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),

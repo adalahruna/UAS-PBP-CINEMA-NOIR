@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:sizer/sizer.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:cinema_noir/features/home/data/models/movie_model.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 
@@ -66,8 +67,12 @@ class _CarouselItem extends StatelessWidget {
               width: 100.w, // Ambil lebar penuh
               placeholder: (context, url) => Container(
                 color: AppColors.darkGrey,
-                child: const Center(
-                  child: CircularProgressIndicator(color: AppColors.gold),
+                child: Center(
+                  child: LoadingAnimationWidget.flickr(
+                    leftDotColor: AppColors.gold,
+                    rightDotColor: Colors.black,
+                    size: 40,
+                  ),
                 ),
               ),
               errorWidget: (context, url, error) => const Icon(Icons.error),

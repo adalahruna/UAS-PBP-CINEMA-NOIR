@@ -5,6 +5,7 @@ import 'dart:math'as math;
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 import 'dart:async';
 
@@ -180,12 +181,23 @@ class _SplashScreenState extends State<SplashScreen>
                 
                 // Loading indicator
                 if (_showTagline && !_showCurtain)
-                  const SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold),
+                  LoadingAnimationWidget.flickr(
+                    leftDotColor: AppColors.gold,
+                    rightDotColor: Colors.black,
+                    size: 50,
+                  ),
+                
+                const SizedBox(height: 32),
+                
+                // Team Credit - Simple
+                if (_showTagline && !_showCurtain)
+                  const Text(
+                    'Kelompok 1',
+                    style: TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 1,
                     ),
                   ),
               ],

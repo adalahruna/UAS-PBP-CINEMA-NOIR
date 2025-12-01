@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:cinema_noir/core/constants/app_colors.dart';
 
 // CARA MENGGUNAKAN:

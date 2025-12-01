@@ -281,12 +281,11 @@ class HomePage extends StatelessWidget {
                               onPressed: () => context.push('/profile'),
                               icon: isLoading
                                   ? const SizedBox(
-                                      width: 14,
-                                      height: 14,
+                                      width: 20,
+                                      height: 20,
                                       child: CircularProgressIndicator(
+                                        color: AppColors.gold,
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                            AppColors.textWhite),
                                       ),
                                     )
                                   : const Icon(Icons.location_on_outlined,
@@ -836,7 +835,6 @@ class _NowPlayingMovieItem extends StatefulWidget {
 }
 
 class _NowPlayingMovieItemState extends State<_NowPlayingMovieItem> {
-  bool _isHovered = false;
   bool _isLoadingTrailer = false;
 
   Future<void> _showTrailer() async {
@@ -888,105 +886,33 @@ class _NowPlayingMovieItemState extends State<_NowPlayingMovieItem> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => !widget.isMobile ? setState(() => _isHovered = true) : null,
-      onExit: (_) => !widget.isMobile ? setState(() => _isHovered = false) : null,
-      child: GestureDetector(
-        onTap: () {
-          print('Navigasi ke detail film ${widget.movie.title}');
-        },
-        child: Container(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: CachedNetworkImage(
-                          imageUrl: widget.movie.getFullPosterUrl(),
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: AppColors.darkGrey,
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            color: AppColors.darkGrey,
-                            child: const Icon(Icons.error, color: AppColors.textGrey),
-                          ),
+    return GestureDetector(
+      onTap: () {
+        print('Navigasi ke detail film ${widget.movie.title}');
+      },
+      child: Container(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: CachedNetworkImage(
+                        imageUrl: widget.movie.getFullPosterUrl(),
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: AppColors.darkGrey,
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: AppColors.darkGrey,
+                          child: const Icon(Icons.error, color: AppColors.textGrey),
                         ),
                       ),
                     ),
-                    
-                    if (!widget.isMobile && _isHovered)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.black.withOpacity(0.6),
-                          ),
-                        ),
-                      ),
-                    
-                    if (!widget.isMobile && _isHovered)
-                      Center(
-                        child: _isLoadingTrailer
-                            ? const CircularProgressIndicator(
-                                color: AppColors.gold,
-                              )
-                            : Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed: _showTrailer,
-                                    icon: const Icon(Icons.play_arrow, size: 28),
-                                    label: const Text(
-                                      'Tonton Trailer',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.gold,
-                                      foregroundColor: AppColors.darkBackground,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 12,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  OutlinedButton.icon(
-                                    onPressed: widget.onBuyTicket,
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.gold,
-                                      side: const BorderSide(color: AppColors.gold, width: 2),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 24,
-                                        vertical: 12,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(30),
-                                      ),
-                                      backgroundColor: Colors.black.withOpacity(0.4),
-                                    ),
-                                    icon: const Icon(Icons.confirmation_number_outlined),
-                                    label: const Text(
-                                      'Beli Tiket',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                      ),
+                  ),
                     
                     Positioned(
                       top: 12,
@@ -1033,53 +959,52 @@ class _NowPlayingMovieItemState extends State<_NowPlayingMovieItem> {
                         ),
                       ),
                     ),
+                ],
+              ),
+            ),
+            if (widget.isMobile)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _showTrailer,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.gold,
+                        foregroundColor: AppColors.darkBackground,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      icon: const Icon(Icons.play_arrow, size: 18),
+                      label: const Text(
+                        'Trailer',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: widget.onBuyTicket,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.gold,
+                        side: const BorderSide(color: AppColors.gold),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      icon: const Icon(Icons.confirmation_number_outlined, size: 18),
+                      label: const Text(
+                        'Beli Tiket',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              if (widget.isMobile)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _showTrailer,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.gold,
-                          foregroundColor: AppColors.darkBackground,
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        icon: const Icon(Icons.play_arrow, size: 18),
-                        label: const Text(
-                          'Trailer',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: widget.onBuyTicket,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.gold,
-                          side: const BorderSide(color: AppColors.gold),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        icon: const Icon(Icons.confirmation_number_outlined, size: 18),
-                        label: const Text(
-                          'Beli Tiket',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
       ),
     );
